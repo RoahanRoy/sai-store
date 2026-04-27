@@ -75,12 +75,13 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   else if (route === 'confirmation') body = <ConfirmationPage cart={cart} address={address} go={go}/>;
   else if (route === 'tracking') body = <TrackingPage go={go}/>;
   else if (route === 'login') body = <LoginPage go={go}/>;
-  else if (route === 'account') body = <AccountPage go={go}/>;
+  else if (route === 'account') body = user ? <AccountPage go={go}/> : <LoginPage go={go}/>;
   else if (route === 'about') body = <AboutPage go={go}/>;
   else if (route === 'gifts') body = <GiftsPage go={go} onAdd={onAdd}/>;
 
   const themeAttr = dark ? 'dark' : theme;
-  const showHeader = route !== 'login';
+  const onLogin = route === 'login' || (route === 'account' && !user);
+  const showHeader = !onLogin;
 
   return (
     <AuthContext.Provider value={{ user, refresh: refreshUser, logout }}>

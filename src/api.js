@@ -38,4 +38,21 @@ export const api = {
   listOrders: () => req('/api/orders'),
   getOrder: (id) => req(`/api/orders/${id}`),
   placeOrder: (address_id) => req('/api/orders', { method: 'POST', body: JSON.stringify({ address_id }) }),
+
+  // admin
+  adminStats: () => req('/api/admin/stats'),
+  adminSignups: (limit = 100) => req(`/api/admin/signups?limit=${limit}`),
+  adminOrders: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return req(`/api/admin/orders${qs ? '?' + qs : ''}`);
+  },
+  adminOrder: (id) => req(`/api/admin/orders/${id}`),
+  adminUpdateOrder: (id, patch) =>
+    req(`/api/admin/orders/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  adminProducts: () => req('/api/admin/products'),
+  adminProduct: (id) => req(`/api/admin/products/${id}`),
+  adminCreateProduct: (p) => req('/api/admin/products', { method: 'POST', body: JSON.stringify(p) }),
+  adminUpdateProduct: (id, p) => req(`/api/admin/products/${id}`, { method: 'PATCH', body: JSON.stringify(p) }),
+  adminDeleteProduct: (id) => req(`/api/admin/products/${id}`, { method: 'DELETE' }),
+  adminCategories: () => req('/api/admin/categories'),
 };

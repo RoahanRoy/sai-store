@@ -3,6 +3,7 @@ import { Icon } from './primitives.jsx';
 import { FestiveStrip, TopStrip, Header, Footer, SearchOverlay, CartDrawer, MobileMenu } from './chrome.jsx';
 import { HomePage, ShopPage, ProductPage, AboutPage, GiftsPage } from './screens-1.jsx';
 import { CartPage, CheckoutPage, PaymentPage, ConfirmationPage, TrackingPage, LoginPage, AccountPage } from './screens-2.jsx';
+import { AdminPage } from './admin.jsx';
 import { api } from './api.js';
 
 export const AuthContext = React.createContext({ user: null, refresh: () => {}, logout: () => {} });
@@ -16,8 +17,15 @@ const DEFAULTS = {
   festive: true,
 };
 
+function getInitialRoute(fallback) {
+  if (typeof window === 'undefined') return fallback;
+  const path = window.location.pathname || '';
+  if (path.startsWith('/admin')) return 'admin';
+  return fallback;
+}
+
 function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = false, theme, typeset, hero, card, dark, festive }) {
-  const [route, setRoute] = React.useState(initialRoute);
+  const [route, setRoute] = React.useState(() => getInitialRoute(initialRoute));
   const [productId, setProductId] = React.useState(initialId);
   const [cart, setCart] = React.useState(initialCart || []);
   const [search, setSearch] = React.useState(false);
@@ -78,6 +86,7 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   else if (route === 'account') body = user ? <AccountPage go={go}/> : <LoginPage go={go}/>;
   else if (route === 'about') body = <AboutPage go={go}/>;
   else if (route === 'gifts') body = <GiftsPage go={go} onAdd={onAdd}/>;
+  else if (route === 'admin') body = <AdminPage go={go}/>;
 
   const themeAttr = dark ? 'dark' : theme;
   const onLogin = route === 'login' || (route === 'account' && !user);

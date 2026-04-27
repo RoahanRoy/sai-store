@@ -11,6 +11,8 @@ import { categoriesRouter } from './routes/categories.js';
 import { cartRouter } from './routes/cart.js';
 import { addressesRouter } from './routes/addresses.js';
 import { ordersRouter } from './routes/orders.js';
+import { adminRouter } from './routes/admin.js';
+import { isAdminUser } from './auth.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,7 +51,7 @@ app.post('/auth/logout', (req, res) => {
 app.get('/auth/me', (req, res) => {
   if (!req.user) return res.json(null);
   const { id, email, name, avatar_url, phone } = req.user;
-  res.json({ id, email, name, avatar_url, phone });
+  res.json({ id, email, name, avatar_url, phone, is_admin: isAdminUser(req.user) });
 });
 
 // API
@@ -58,6 +60,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/addresses', addressesRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

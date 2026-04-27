@@ -52,3 +52,19 @@ export function requireAuth(req, res, next) {
   if (req.isAuthenticated && req.isAuthenticated()) return next();
   res.status(401).json({ error: 'unauthorized' });
 }
+
+export function isAdminUser(user) {
+  if (!user) return false;
+  if (user.is_admin) return true;
+  const allow = (process.env.ADMIN_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(String(user.email || '').toLowerCase());
+}
+
+export function requireAdmin(req, res, next) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  if (!isAdminUser(req.user)) return res.status(403).json({ error: 'forbidden' });
+  next();
+}

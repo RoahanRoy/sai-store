@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "emmet.includeLanguages": { "javascript": "javascriptreact" },
+  "files.associations": { "*.jsx": "javascriptreact" },
+  "javascript.preferences.importModuleSpecifierEnding": "js",
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "css.validate": true,
+  "editor.quickSuggestions": { "strings": true },
+  "path-intellisense.extensionOnImport": true,
+  "liveServer.settings.port": 5500
+}

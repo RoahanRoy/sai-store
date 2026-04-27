@@ -1,0 +1,361 @@
+/* Sai Store — heritage boutique e-commerce */
+
+:root {
+  /* Heritage warm palette (default) */
+  --bg: #faf6ef;
+  --bg-soft: #f3ecdf;
+  --bg-deep: #ebe1cd;
+  --ink: #1a1410;
+  --ink-soft: #4a3f33;
+  --ink-mute: #7a6b5b;
+  --line: #e3d8c2;
+  --line-soft: #ede4d2;
+
+  --saffron: #d97706;
+  --saffron-deep: #a8580a;
+  --marigold: #f59e0b;
+  --terracotta: #b8431f;
+  --peacock: #0e6b6b;
+  --peacock-deep: #074545;
+  --plum: #6b1f3a;
+  --gold: #b8852a;
+  --gold-soft: #d4a847;
+
+  --accent: var(--saffron);
+  --accent-deep: var(--saffron-deep);
+  --secondary: var(--peacock);
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+
+  --shadow-sm: 0 1px 2px rgba(60,40,20,.05), 0 2px 6px rgba(60,40,20,.04);
+  --shadow: 0 2px 6px rgba(60,40,20,.06), 0 8px 24px rgba(60,40,20,.06);
+  --shadow-lg: 0 6px 16px rgba(60,40,20,.08), 0 24px 60px rgba(60,40,20,.10);
+
+  --display: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+  --body: 'Inter', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+[data-theme="cool"] {
+  --accent: #0e6b6b;
+  --accent-deep: #074545;
+  --secondary: #b8431f;
+}
+[data-theme="mono"] {
+  --accent: #1a1410;
+  --accent-deep: #000;
+  --secondary: #4a3f33;
+}
+[data-theme="dark"] {
+  --bg: #14110d;
+  --bg-soft: #1f1a14;
+  --bg-deep: #2a221a;
+  --ink: #f5ebd9;
+  --ink-soft: #d8c9b0;
+  --ink-mute: #9c8a72;
+  --line: #3a3024;
+  --line-soft: #2a221a;
+  --accent: #f59e0b;
+  --accent-deep: #d97706;
+  --secondary: #4dadad;
+}
+
+/* Type pairings */
+[data-typeset="classic"] { --display: 'Fraunces', Georgia, serif; --body: 'Inter', sans-serif; }
+[data-typeset="editorial"] { --display: 'Cormorant Garamond', serif; --body: 'Work Sans', sans-serif; }
+[data-typeset="modern"] { --display: 'Playfair Display', serif; --body: 'DM Sans', sans-serif; }
+[data-typeset="bold"] { --display: 'Bricolage Grotesque', sans-serif; --body: 'Inter', sans-serif; }
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #f0eee9;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.sai {
+  font-family: var(--body);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.sai h1, .sai h2, .sai h3, .sai .display {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin: 0;
+}
+.sai .italic { font-style: italic; font-feature-settings: 'ss01'; }
+
+/* ─── Logo / mark ─── */
+.sai-mark {
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.sai-mark .ring {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid var(--accent);
+  display: grid; place-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.sai-mark .ring::before {
+  content: ''; position: absolute; inset: 3px;
+  border-radius: 50%; border: 1px dashed var(--accent);
+  opacity: .4;
+}
+.sai-mark .glyph {
+  font-family: var(--display); font-style: italic;
+  font-size: 19px; color: var(--accent);
+  font-weight: 500; line-height: 1;
+}
+.sai-mark .word {
+  font-family: var(--display);
+  font-size: 20px; line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.sai-mark .word i { font-style: italic; color: var(--accent); }
+.sai-mark .tag {
+  font-family: var(--body);
+  font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-top: 3px;
+}
+
+.sai-mark.lg .ring { width: 64px; height: 64px; border-width: 2px; }
+.sai-mark.lg .glyph { font-size: 32px; }
+.sai-mark.lg .word { font-size: 32px; }
+
+/* ─── Ornamental divider ─── */
+.ornament {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--accent); font-size: 12px;
+}
+.ornament::before, .ornament::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: .5;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  font-family: var(--body);
+  font-size: 14px; font-weight: 500;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all .15s ease;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+.btn-ghost {
+  background: transparent; color: var(--ink);
+  border-color: var(--line);
+}
+.btn-ghost:hover { background: var(--bg-soft); border-color: var(--ink-soft); }
+.btn-dark {
+  background: var(--ink); color: var(--bg);
+  border-color: var(--ink);
+}
+.btn-dark:hover { background: var(--ink-soft); }
+.btn-link {
+  background: transparent; color: var(--ink);
+  border: none; padding: 4px 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+}
+.btn-block { width: 100%; justify-content: center; }
+.btn-sm { padding: 8px 14px; font-size: 12px; }
+.btn-lg { padding: 16px 32px; font-size: 15px; }
+
+/* ─── Chip / tag ─── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px;
+  background: var(--bg-soft); color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.chip-accent { background: rgba(217,119,6,.1); color: var(--accent-deep); border-color: rgba(217,119,6,.25); }
+.chip-peacock { background: rgba(14,107,107,.1); color: var(--peacock-deep); border-color: rgba(14,107,107,.25); }
+.chip-plum { background: rgba(107,31,58,.08); color: var(--plum); border-color: rgba(107,31,58,.2); }
+
+/* ─── Input ─── */
+.field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.field label {
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-mute); font-weight: 500;
+}
+.field input, .field select, .field textarea {
+  font-family: var(--body); font-size: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(217,119,6,.12);
+}
+.field .err { color: #b8431f; font-size: 12px; }
+.field.error input, .field.error select { border-color: #b8431f; }
+
+/* ─── Product image placeholder (striped + label) ─── */
+.prod-img {
+  position: relative; width: 100%;
+  background: var(--bg-deep);
+  overflow: hidden;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--ink-mute); letter-spacing: .1em;
+  isolation: isolate;
+}
+.prod-img::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0, transparent 14px,
+    rgba(120,90,50,.05) 14px, rgba(120,90,50,.05) 15px
+  );
+  z-index: 0;
+}
+.prod-img .vessel {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.prod-img .label-tag {
+  position: absolute; bottom: 10px; left: 10px;
+  font-family: var(--mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: .14em;
+  color: var(--ink-mute);
+  background: rgba(255,255,255,.6);
+  padding: 3px 7px; border-radius: 3px;
+  z-index: 2;
+}
+
+/* Vessel SVG fills set by parent class for material */
+.mat-brass { --vessel: #b8852a; --vessel-soft: #d4a847; --vessel-deep: #8a5e15; }
+.mat-copper { --vessel: #b8431f; --vessel-soft: #d97050; --vessel-deep: #8a2810; }
+.mat-steel { --vessel: #8a8a92; --vessel-soft: #b8b8c0; --vessel-deep: #5a5a62; }
+
+/* ─── Card ─── */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.card:hover { box-shadow: var(--shadow); }
+
+/* ─── Scroll ─── */
+.scroll-y { overflow-y: auto; }
+.scroll-y::-webkit-scrollbar { width: 6px; }
+.scroll-y::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+.no-scroll::-webkit-scrollbar { display: none; }
+.no-scroll { scrollbar-width: none; }
+
+/* Small utility */
+.muted { color: var(--ink-mute); }
+.soft { color: var(--ink-soft); }
+.tiny { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+
+/* Strike */
+.strike { text-decoration: line-through; color: var(--ink-mute); }
+
+/* Animations */
+@keyframes saiFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.fadeup { animation: saiFadeUp .4s ease both; }
+
+@keyframes saiPing {
+  0% { transform: scale(.9); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.ping {
+  position: absolute; inset: 0; border-radius: inherit;
+  border: 2px solid var(--accent); animation: saiPing .6s ease forwards;
+}
+
+@keyframes saiCheck {
+  from { stroke-dashoffset: 60; }
+  to { stroke-dashoffset: 0; }
+}
+.check-anim path { stroke-dasharray: 60; animation: saiCheck .6s ease .2s forwards; }
+
+@keyframes saiSpin { to { transform: rotate(360deg); } }
+.spin { animation: saiSpin 1s linear infinite; }
+
+@keyframes saiBounceIn {
+  0% { transform: scale(.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.bouncein { animation: saiBounceIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+
+@keyframes saiPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Mehndi-style border ornament */
+.mehndi-border {
+  background-image:
+    radial-gradient(circle at 6px 6px, var(--accent) 1px, transparent 1.5px),
+    radial-gradient(circle at 12px 6px, transparent 2px, var(--accent) 2px, var(--accent) 2.5px, transparent 3px);
+  background-size: 18px 12px;
+  background-repeat: repeat-x;
+  height: 12px;
+  opacity: .5;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .prod-img { background: #261f17; }
+[data-theme="dark"] .prod-img::before {
+  background: repeating-linear-gradient(135deg, transparent 0, transparent 14px, rgba(245,235,217,.04) 14px, rgba(245,235,217,.04) 15px);
+}
+
+/* Festive overlay */
+.festive-strip {
+  background: linear-gradient(90deg, var(--terracotta), var(--saffron), var(--gold), var(--saffron), var(--terracotta));
+  color: #fff;
+  text-align: center;
+  font-size: 12px; padding: 8px 16px;
+  letter-spacing: .08em;
+  font-weight: 500;
+}
+
+/* Mobile responsive tweaks */
+@media (max-width: 768px) {
+  .sai h1 { font-size: clamp(32px, 8vw, 74px); }
+}

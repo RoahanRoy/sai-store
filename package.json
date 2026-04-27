@@ -3,16 +3,30 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n web,api -c cyan,magenta \"vite\" \"nodemon server/index.js\"",
+    "dev:web": "vite",
+    "dev:api": "nodemon server/index.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:migrate": "node db/run-sql.mjs db/migrations/0001_init.sql",
+    "db:seed": "node db/run-sql.mjs db/seed/seed.sql"
   },
   "dependencies": {
+    "connect-pg-simple": "^10.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14",
     "vite": "^6.3.3"
   }
 }

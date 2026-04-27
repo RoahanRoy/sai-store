@@ -3,6 +3,7 @@ import React from 'react';
 import { PRODUCTS, ADDRESSES, ORDERS } from './data.js';
 import { Icon, ProdImg, SaiMark } from './primitives.jsx';
 import { ProductCard } from './chrome.jsx';
+import { api } from './api.js';
 
 export function CartPage({ cart, setCart, go }) {
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
@@ -499,8 +500,8 @@ export function LoginPage({ go }) {
           </div>
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <button className="btn btn-ghost">Google</button>
-            <button className="btn btn-ghost">Apple</button>
+            <button className="btn btn-ghost" onClick={()=>api.loginGoogle()}>Google</button>
+            <button className="btn btn-ghost" disabled>Apple</button>
           </div>
 
           <div style={{marginTop:30,fontSize:13,color:'var(--ink-soft)',textAlign:'center'}}>

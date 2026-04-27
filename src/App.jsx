@@ -3,6 +3,9 @@ import { Icon } from './primitives.jsx';
 import { FestiveStrip, TopStrip, Header, Footer, SearchOverlay, CartDrawer, MobileMenu } from './chrome.jsx';
 import { HomePage, ShopPage, ProductPage, AboutPage, GiftsPage } from './screens-1.jsx';
 import { CartPage, CheckoutPage, PaymentPage, ConfirmationPage, TrackingPage, LoginPage, AccountPage } from './screens-2.jsx';
+import { api } from './api.js';
+
+export const AuthContext = React.createContext({ user: null, refresh: () => {}, logout: () => {} });
 
 const DEFAULTS = {
   theme: 'warm',
@@ -22,6 +25,24 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   const [menu, setMenu] = React.useState(false);
   const [address, setAddress] = React.useState(null);
   const [pinging, setPinging] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+
+  const refreshUser = React.useCallback(async () => {
+    try { setUser(await api.me()); } catch { setUser(null); }
+  }, []);
+
+  React.useEffect(() => { refreshUser(); }, [refreshUser]);
+
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('login') === 'success') {
+      url.searchParams.delete('login');
+      window.history.replaceState({}, '', url.pathname + (url.search || ''));
+      refreshUser().then(() => setRoute('account'));
+    }
+  }, [refreshUser]);
+
+  const logout = async () => { try { await api.logout(); } finally { setUser(null); setRoute('home'); } };
 
   function go(r, id) {
     setRoute(r);
@@ -62,6 +83,7 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   const showHeader = route !== 'login';
 
   return (
+    <AuthContext.Provider value={{ user, refresh: refreshUser, logout }}>
     <div className="sai" data-theme={themeAttr} data-typeset={typeset} style={{minHeight:'100%',background:'var(--bg)',color:'var(--ink)',position:'relative'}}>
       {showHeader && festive && <FestiveStrip show={festive}/>}
       {showHeader && !mobile && <TopStrip/>}
@@ -77,6 +99,7 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
         </div>
       )}
     </div>
+    </AuthContext.Provider>
   );
 }
 

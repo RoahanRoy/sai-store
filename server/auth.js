@@ -10,10 +10,15 @@ export function configurePassport() {
     return;
   }
 
+  const callbackURL = process.env.OAUTH_CALLBACK_URL
+    || (process.env.PUBLIC_BASE_URL ? `${process.env.PUBLIC_BASE_URL.replace(/\/$/, '')}/auth/google/callback` : null)
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/auth/google/callback` : null)
+    || `http://localhost:${PORT}/auth/google/callback`;
+
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `http://localhost:${PORT}/auth/google/callback`,
+    callbackURL,
   }, async (_accessToken, _refreshToken, profile, done) => {
     try {
       const email = profile.emails?.[0]?.value;

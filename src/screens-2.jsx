@@ -1,9 +1,25 @@
 // Screens part 2: Cart, Checkout, Payment, Order Confirmation, Tracking, Login, Account
 import React from 'react';
-import { PRODUCTS, ADDRESSES, ORDERS } from './data.js';
+import { ADDRESSES } from './data.js';
 import { Icon, ProdImg, SaiMark } from './primitives.jsx';
-import { ProductCard } from './chrome.jsx';
 import { api } from './api.js';
+import { AuthContext } from './App.jsx';
+
+function formatMemberSince(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function firstName(name) {
+  if (!name) return 'friend';
+  return name.trim().split(/\s+/)[0];
+}
+
+function initials(name, email) {
+  const src = (name || email || '?').trim();
+  return src.charAt(0).toUpperCase();
+}
 
 export function CartPage({ cart, setCart, go }) {
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
@@ -465,7 +481,12 @@ export function LoginPage({ go }) {
 
           {stage === 'phone' && (
             <>
-              {mode === 'signup' && <div className="field" style={{marginBottom:14}}><label>Full Name</label><input placeholder="Aarav Sharma"/></div>}
+              {mode === 'signup' && (
+                <>
+                  <div className="field" style={{marginBottom:14}}><label>Full Name</label><input placeholder="Aarav Sharma"/></div>
+                  <div className="field" style={{marginBottom:14}}><label>Email</label><input type="email" placeholder="you@example.com"/></div>
+                </>
+              )}
               <div className="field" style={{marginBottom:14}}>
                 <label>Mobile number</label>
                 <div style={{display:'flex',gap:8}}>
@@ -474,7 +495,12 @@ export function LoginPage({ go }) {
                 </div>
                 {err && <div className="err">{err}</div>}
               </div>
-              {mode === 'signup' && <label style={{display:'flex',gap:8,fontSize:12,color:'var(--ink-mute)',marginBottom:18}}><input type="checkbox" style={{accentColor:'var(--accent)'}}/>I agree to the Terms of Service & Privacy Policy</label>}
+              {mode === 'signup' && (
+                <>
+                  <div className="field" style={{marginBottom:14}}><label>Date of birth</label><input type="date"/></div>
+                  <label style={{display:'flex',gap:8,fontSize:12,color:'var(--ink-mute)',marginBottom:18}}><input type="checkbox" style={{accentColor:'var(--accent)'}}/>I agree to the Terms of Service & Privacy Policy</label>
+                </>
+              )}
               <button onClick={()=>{ if(!/^\d{10}$/.test(phone)) { setErr('Enter 10-digit mobile'); return; } setStage('otp'); }} className="btn btn-primary btn-lg btn-block">Send OTP <Icon.ArrowRight/></button>
             </>
           )}
@@ -522,110 +548,197 @@ export function LoginPage({ go }) {
 }
 
 export function AccountPage({ go }) {
-  const [tab, setTab] = React.useState('orders');
+  const { user, refresh, logout } = React.useContext(AuthContext);
+  const initialTab = user && !user.profile_complete ? 'settings' : 'orders';
+  const [tab, setTab] = React.useState(initialTab);
+  const [orders, setOrders] = React.useState([]);
+  const [addresses, setAddresses] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!user) return;
+    api.listOrders().then(setOrders).catch(() => setOrders([]));
+    api.listAddresses().then(setAddresses).catch(() => setAddresses([]));
+  }, [user]);
+
+  if (!user) return null;
+
+  const displayName = user.name || user.email || 'friend';
+  const memberSince = formatMemberSince(user.created_at);
+  const orderCount = orders.length;
+  const incomplete = !user.profile_complete;
+
+  const productThumb = ['lota','bottle','thali','diya'];
+  const materialThumb = ['brass','copper'];
+
   return (
     <div style={{padding:'40px 40px 80px'}}>
       <div style={{fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)',marginBottom:6}}>HOME · MY ACCOUNT</div>
-      <h1 style={{fontSize:48,marginBottom:8}}>Namaste, <span className="italic" style={{color:'var(--accent)'}}>Aarav</span></h1>
-      <p style={{fontSize:14,color:'var(--ink-mute)',marginBottom:30}}>Member since March 2024 · 7 orders · Heritage Member</p>
+      <h1 style={{fontSize:48,marginBottom:8}}>Namaste, <span className="italic" style={{color:'var(--accent)'}}>{firstName(displayName)}</span></h1>
+      <p style={{fontSize:14,color:'var(--ink-mute)',marginBottom:30}}>
+        {memberSince ? `Member since ${memberSince}` : 'Welcome to Sai Store'} · {orderCount} order{orderCount===1?'':'s'} · Heritage Member
+      </p>
+
+      {incomplete && (
+        <div style={{padding:'14px 18px',background:'rgba(217,119,6,.08)',border:'1px solid rgba(217,119,6,.3)',borderRadius:10,marginBottom:24,display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+          <div style={{fontSize:13,color:'var(--ink-soft)'}}>
+            <strong style={{color:'var(--ink)'}}>Complete your profile</strong> — we need a few details to ship orders, send updates, and personalise festive picks.
+          </div>
+          <button onClick={()=>setTab('settings')} className="btn btn-primary btn-sm">Complete profile <Icon.ArrowRight/></button>
+        </div>
+      )}
 
       <div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:32}}>
         <aside>
           <div style={{padding:18,background:'var(--bg-soft)',borderRadius:12,marginBottom:14}}>
-            <div style={{width:48,height:48,borderRadius:'50%',background:'var(--accent)',color:'#fff',display:'grid',placeItems:'center',fontFamily:'var(--display)',fontSize:22,marginBottom:10}}>A</div>
-            <div style={{fontFamily:'var(--display)',fontSize:18}}>Aarav Sharma</div>
-            <div style={{fontSize:12,color:'var(--ink-mute)'}}>aarav@email.com</div>
+            {user.avatar_url
+              ? <img src={user.avatar_url} alt="" style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',marginBottom:10}}/>
+              : <div style={{width:48,height:48,borderRadius:'50%',background:'var(--accent)',color:'#fff',display:'grid',placeItems:'center',fontFamily:'var(--display)',fontSize:22,marginBottom:10}}>{initials(user.name, user.email)}</div>
+            }
+            <div style={{fontFamily:'var(--display)',fontSize:18}}>{displayName}</div>
+            <div style={{fontSize:12,color:'var(--ink-mute)'}}>{user.email}</div>
           </div>
           {[
-            {id:'orders',label:'My Orders',n:7},
-            {id:'addresses',label:'Addresses',n:2},
-            {id:'wishlist',label:'Wishlist',n:14},
-            {id:'rewards',label:'Heritage Points',n:'2,140'},
+            {id:'orders',label:'My Orders',n:orderCount},
+            {id:'addresses',label:'Addresses',n:addresses.length},
+            {id:'wishlist',label:'Wishlist'},
+            {id:'rewards',label:'Heritage Points'},
             {id:'settings',label:'Settings'},
           ].map(t => (
             <div key={t.id} onClick={()=>setTab(t.id)} style={{padding:'12px 14px',cursor:'pointer',borderRadius:8,display:'flex',justifyContent:'space-between',fontSize:14,marginBottom:2,background: tab===t.id?'var(--bg-soft)':'transparent',color: tab===t.id?'var(--ink)':'var(--ink-soft)',fontWeight: tab===t.id?500:400}}>
               {t.label}{t.n != null && <span style={{color:'var(--ink-mute)',fontSize:12}}>{t.n}</span>}
             </div>
           ))}
-          <button onClick={()=>go('login')} style={{padding:'12px 14px',marginTop:14,background:'none',border:0,color:'var(--ink-mute)',fontSize:13,cursor:'pointer',width:'100%',textAlign:'left'}}>Sign out →</button>
+          <button onClick={async ()=>{ await logout(); go('home'); }} style={{padding:'12px 14px',marginTop:14,background:'none',border:0,color:'var(--ink-mute)',fontSize:13,cursor:'pointer',width:'100%',textAlign:'left'}}>Sign out →</button>
         </aside>
 
         <div>
           {tab === 'orders' && (
             <>
               <h2 style={{fontSize:24,marginBottom:18}}>Order History</h2>
-              <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                {ORDERS.map((o, i) => (
-                  <div key={o.id} className="card" style={{padding:20,display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:20,alignItems:'center'}}>
-                    <div style={{width:60,height:60,borderRadius:8,overflow:'hidden'}}><ProdImg kind={['lota','bottle','thali','diya'][i % 4]} material={['brass','copper'][i % 2]} size={40}/></div>
-                    <div>
-                      <div style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--ink-mute)'}}>{o.id}</div>
-                      <div style={{fontSize:15,marginTop:2}}>{o.items} item{o.items>1?'s':''} · ₹{o.total.toLocaleString('en-IN')}</div>
-                      <div style={{fontSize:12,color:'var(--ink-mute)',marginTop:2}}>Placed on {o.date}</div>
-                    </div>
-                    <span className="chip chip-peacock">{o.status}</span>
-                    <button onClick={()=>go('tracking')} className="btn btn-ghost btn-sm">View →</button>
-                  </div>
-                ))}
-              </div>
+              {orders.length === 0 ? (
+                <div className="card" style={{padding:30,textAlign:'center',color:'var(--ink-mute)'}}>
+                  <p style={{fontSize:14,marginBottom:14}}>No orders yet. Discover something heirloom-worthy.</p>
+                  <button onClick={()=>go('shop')} className="btn btn-primary btn-sm">Shop the collection <Icon.ArrowRight/></button>
+                </div>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  {orders.map((o, i) => {
+                    const placed = o.placed_at ? new Date(o.placed_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
+                    return (
+                      <div key={o.id} className="card" style={{padding:20,display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:20,alignItems:'center'}}>
+                        <div style={{width:60,height:60,borderRadius:8,overflow:'hidden'}}><ProdImg kind={productThumb[i % 4]} material={materialThumb[i % 2]} size={40}/></div>
+                        <div>
+                          <div style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--ink-mute)'}}>{o.id}</div>
+                          <div style={{fontSize:15,marginTop:2}}>{o.items} item{o.items>1?'s':''} · ₹{Number(o.total).toLocaleString('en-IN')}</div>
+                          <div style={{fontSize:12,color:'var(--ink-mute)',marginTop:2}}>Placed on {placed}</div>
+                        </div>
+                        <span className="chip chip-peacock">{o.status}</span>
+                        <button onClick={()=>go('tracking')} className="btn btn-ghost btn-sm">View →</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
           {tab === 'addresses' && (
             <>
               <h2 style={{fontSize:24,marginBottom:18}}>Saved Addresses</h2>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-                {ADDRESSES.map(a => (
+                {addresses.map(a => (
                   <div key={a.id} className="card" style={{padding:20,position:'relative'}}>
                     <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-                      <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label}</span>
-                      {a.def && <span className="chip chip-accent">DEFAULT</span>}
+                      <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label || 'Address'}</span>
+                      {a.is_default && <span className="chip chip-accent">DEFAULT</span>}
                     </div>
                     <div style={{fontSize:13,marginBottom:4}}>{a.name}</div>
                     <div style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.5,marginBottom:6}}>{a.line}, {a.city}, {a.state} – {a.pin}</div>
                     <div style={{fontSize:12,color:'var(--ink-mute)'}}>{a.phone}</div>
-                    <div style={{display:'flex',gap:14,marginTop:14,fontSize:12}}><span style={{color:'var(--accent)',cursor:'pointer'}}>Edit</span><span style={{color:'var(--ink-mute)',cursor:'pointer'}}>Delete</span></div>
                   </div>
                 ))}
-                <div className="card" style={{padding:20,border:'1.5px dashed var(--line)',display:'grid',placeItems:'center',cursor:'pointer',background:'transparent',color:'var(--ink-mute)'}}>+ Add new address</div>
+                {addresses.length === 0 && (
+                  <div className="card" style={{padding:20,gridColumn:'span 2',color:'var(--ink-mute)',fontSize:13}}>No saved addresses yet. Add one at checkout.</div>
+                )}
               </div>
             </>
           )}
           {tab === 'wishlist' && (
             <>
               <h2 style={{fontSize:24,marginBottom:18}}>My Wishlist</h2>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14}}>
-                {PRODUCTS.slice(0,3).map(p => <ProductCard key={p.id} p={p} onClick={()=>go('product',p.id)} variant="minimal"/>)}
-              </div>
+              <div className="card" style={{padding:30,textAlign:'center',color:'var(--ink-mute)',fontSize:13}}>Wishlist coming soon.</div>
             </>
           )}
           {tab === 'rewards' && (
             <div style={{padding:30,background:'linear-gradient(135deg, var(--accent), var(--terracotta))',borderRadius:14,color:'#fff'}}>
               <div className="tiny" style={{opacity:.85,marginBottom:8}}>HERITAGE MEMBER</div>
-              <h2 style={{fontSize:48,fontFamily:'var(--display)'}}>2,140 <span style={{fontSize:18,fontStyle:'italic',opacity:.9}}>points</span></h2>
+              <h2 style={{fontSize:48,fontFamily:'var(--display)'}}>0 <span style={{fontSize:18,fontStyle:'italic',opacity:.9}}>points</span></h2>
               <p style={{maxWidth:400,fontSize:14,opacity:.9,marginTop:8}}>Earn 1 point per ₹100 spent. Redeem 100 points for ₹50 off your next order.</p>
-              <button className="btn btn-dark" style={{marginTop:18}}>Redeem Points</button>
             </div>
           )}
-          {tab === 'settings' && (
-            <>
-              <h2 style={{fontSize:24,marginBottom:18}}>Account Settings</h2>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,maxWidth:600}}>
-                <div className="field"><label>Full Name</label><input defaultValue="Aarav Sharma"/></div>
-                <div className="field"><label>Email</label><input defaultValue="aarav@email.com"/></div>
-                <div className="field"><label>Mobile</label><input defaultValue="+91 98765 43210"/></div>
-                <div className="field"><label>Birthday</label><input type="date" defaultValue="1992-03-12"/></div>
-                <div className="field" style={{gridColumn:'span 2'}}>
-                  <label>Notifications</label>
-                  <label style={{display:'flex',gap:10,fontSize:13,padding:'6px 0'}}><input type="checkbox" defaultChecked style={{accentColor:'var(--accent)'}}/>Order updates via SMS</label>
-                  <label style={{display:'flex',gap:10,fontSize:13,padding:'6px 0'}}><input type="checkbox" defaultChecked style={{accentColor:'var(--accent)'}}/>Festive drops & artisan stories</label>
-                  <label style={{display:'flex',gap:10,fontSize:13,padding:'6px 0'}}><input type="checkbox" style={{accentColor:'var(--accent)'}}/>Weekly newsletter</label>
-                </div>
-                <button className="btn btn-primary" style={{gridColumn:'span 2',justifySelf:'flex-start'}}>Save changes</button>
-              </div>
-            </>
-          )}
+          {tab === 'settings' && <AccountSettings user={user} refresh={refresh}/>}
         </div>
       </div>
     </div>
+  );
+}
+
+function AccountSettings({ user, refresh }) {
+  const [form, setForm] = React.useState({
+    name: user.name || '',
+    phone: user.phone || '',
+    dob: user.dob ? String(user.dob).slice(0, 10) : '',
+    gender: user.gender || '',
+  });
+  const [saving, setSaving] = React.useState(false);
+  const [msg, setMsg] = React.useState('');
+
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setMsg(''); }
+
+  async function save() {
+    setSaving(true); setMsg('');
+    try {
+      await api.updateMe({
+        name: form.name.trim() || null,
+        phone: form.phone.trim() || null,
+        dob: form.dob || null,
+        gender: form.gender || null,
+      });
+      await refresh();
+      setMsg('Saved');
+    } catch (e) {
+      setMsg('Could not save — try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const missing = !user.profile_complete;
+
+  return (
+    <>
+      <h2 style={{fontSize:24,marginBottom:6}}>Account Settings</h2>
+      <p style={{fontSize:13,color:'var(--ink-mute)',marginBottom:18}}>
+        {missing ? 'Please complete the fields below — we use these to ship orders and send delivery updates.' : 'Update your details any time.'}
+      </p>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,maxWidth:600}}>
+        <div className="field"><label>Full Name *</label><input value={form.name} onChange={e=>set('name', e.target.value)} placeholder="Your full name"/></div>
+        <div className="field"><label>Email</label><input value={user.email || ''} disabled/></div>
+        <div className="field"><label>Mobile *</label><input value={form.phone} onChange={e=>set('phone', e.target.value)} placeholder="+91 98765 43210"/></div>
+        <div className="field"><label>Date of birth *</label><input type="date" value={form.dob} onChange={e=>set('dob', e.target.value)}/></div>
+        <div className="field" style={{gridColumn:'span 2'}}>
+          <label>Gender</label>
+          <select value={form.gender} onChange={e=>set('gender', e.target.value)} style={{padding:'12px',border:'1px solid var(--line)',borderRadius:8,fontSize:14,background:'var(--bg)'}}>
+            <option value="">Prefer not to say</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div style={{gridColumn:'span 2',display:'flex',gap:14,alignItems:'center'}}>
+          <button onClick={save} disabled={saving} className="btn btn-primary">{saving ? 'Saving…' : 'Save changes'}</button>
+          {msg && <span style={{fontSize:13,color: msg==='Saved' ? 'var(--peacock)' : 'var(--terracotta)'}}>{msg}</span>}
+        </div>
+      </div>
+    </>
   );
 }

@@ -54,10 +54,35 @@ app.post('/auth/logout', (req, res) => {
   });
 });
 
+function publicUser(u) {
+  if (!u) return null;
+  const { id, email, name, avatar_url, phone, dob, gender, created_at } = u;
+  return {
+    id, email, name, avatar_url, phone, dob, gender, created_at,
+    is_admin: isAdminUser(u),
+    profile_complete: !!(name && phone && dob),
+  };
+}
+
 app.get('/auth/me', (req, res) => {
-  if (!req.user) return res.json(null);
-  const { id, email, name, avatar_url, phone } = req.user;
-  res.json({ id, email, name, avatar_url, phone, is_admin: isAdminUser(req.user) });
+  res.json(publicUser(req.user));
+});
+
+app.patch('/auth/me', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { name, phone, dob, gender } = req.body || {};
+  const { rows } = await pool.query(
+    `UPDATE users SET
+        name   = COALESCE($1, name),
+        phone  = COALESCE($2, phone),
+        dob    = COALESCE($3, dob),
+        gender = COALESCE($4, gender),
+        updated_at = NOW()
+     WHERE id = $5
+     RETURNING *`,
+    [name ?? null, phone ?? null, dob || null, gender ?? null, req.user.id]
+  );
+  res.json(publicUser(rows[0]));
 });
 
 app.use('/api/products', productsRouter);

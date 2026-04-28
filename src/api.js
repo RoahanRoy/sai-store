@@ -10,6 +10,7 @@ async function req(path, init = {}) {
 export const api = {
   // auth
   me: () => req('/auth/me'),
+  updateMe: (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) }),
   loginGoogle: () => { window.location.href = '/auth/google'; },
   logout: () => req('/auth/logout', { method: 'POST' }),
 

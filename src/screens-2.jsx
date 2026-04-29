@@ -706,7 +706,7 @@ function AccountSettings({ user, refresh }) {
       await refresh();
       setMsg('Saved');
     } catch (e) {
-      setMsg('Could not save — try again.');
+      setMsg(`Could not save — ${e?.message || 'try again.'}`);
     } finally {
       setSaving(false);
     }

@@ -3,7 +3,11 @@ const opts = { credentials: 'include', headers: { 'Content-Type': 'application/j
 
 async function req(path, init = {}) {
   const r = await fetch(path, { ...opts, ...init });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  if (!r.ok) {
+    let detail = '';
+    try { const j = await r.json(); detail = j?.error || j?.message || ''; } catch {}
+    throw new Error(detail ? `${r.status} ${detail}` : `${r.status} ${r.statusText}`);
+  }
   return r.status === 204 ? null : r.json();
 }
 

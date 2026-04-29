@@ -71,18 +71,26 @@ app.get('/auth/me', (req, res) => {
 app.patch('/auth/me', async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
   const { name, phone, dob, gender } = req.body || {};
-  const { rows } = await pool.query(
-    `UPDATE users SET
-        name   = COALESCE($1, name),
-        phone  = COALESCE($2, phone),
-        dob    = COALESCE($3, dob),
-        gender = COALESCE($4, gender),
-        updated_at = NOW()
-     WHERE id = $5
-     RETURNING *`,
-    [name ?? null, phone ?? null, dob || null, gender ?? null, req.user.id]
-  );
-  res.json(publicUser(rows[0]));
+  try {
+    const { rows } = await pool.query(
+      `UPDATE users SET
+          name   = COALESCE($1, name),
+          phone  = COALESCE($2, phone),
+          dob    = COALESCE($3, dob),
+          gender = COALESCE($4, gender),
+          updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [name ?? null, phone ?? null, dob || null, gender ?? null, req.user.id]
+    );
+    res.json(publicUser(rows[0]));
+  } catch (err) {
+    console.error('[PATCH /auth/me]', err);
+    const msg = err?.code === '42703'
+      ? 'profile columns missing — run migration 0004_user_profile.sql'
+      : (err?.message || 'update failed');
+    res.status(500).json({ error: msg });
+  }
 });
 
 app.use('/api/products', productsRouter);

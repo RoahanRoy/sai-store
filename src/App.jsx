@@ -24,7 +24,23 @@ function getInitialRoute(fallback) {
   return fallback;
 }
 
-function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = false, theme, typeset, hero, card, dark: darkProp, festive }) {
+function useIsMobile() {
+  const [mobile, setMobile] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 760px)').matches;
+  });
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 760px)');
+    const fn = (e) => setMobile(e.matches);
+    mq.addEventListener('change', fn);
+    return () => mq.removeEventListener('change', fn);
+  }, []);
+  return mobile;
+}
+
+function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile: mobileProp = false, theme, typeset, hero, card, dark: darkProp, festive }) {
+  const mobileAuto = useIsMobile();
+  const mobile = mobileProp || mobileAuto;
   const [route, setRoute] = React.useState(() => getInitialRoute(initialRoute));
   const [productId, setProductId] = React.useState(initialId);
   const [cart, setCart] = React.useState(initialCart || []);
@@ -95,18 +111,18 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   const cartCount = cart.reduce((s, it) => s + it.qty, 0);
 
   let body;
-  if (route === 'home') body = <HomePage go={go} onAdd={onAdd} heroVariant={hero} cardVariant={card}/>;
-  else if (route === 'shop') body = <ShopPage go={go} onAdd={onAdd} cardVariant={card}/>;
-  else if (route === 'product') body = <ProductPage id={productId} go={go} onAdd={onAdd}/>;
-  else if (route === 'cart') body = <CartPage cart={cart} setCart={setCart} go={go}/>;
-  else if (route === 'checkout') body = <CheckoutPage cart={cart} go={go} address={address} setAddress={setAddress}/>;
-  else if (route === 'payment') body = <PaymentPage cart={cart} go={go} address={address} onPlaceOrder={()=>{}}/>;
-  else if (route === 'confirmation') body = <ConfirmationPage cart={cart} address={address} go={go}/>;
-  else if (route === 'tracking') body = <TrackingPage go={go}/>;
-  else if (route === 'login') body = <LoginPage go={go}/>;
-  else if (route === 'account') body = user ? <AccountPage go={go}/> : <LoginPage go={go}/>;
-  else if (route === 'about') body = <AboutPage go={go}/>;
-  else if (route === 'gifts') body = <GiftsPage go={go} onAdd={onAdd}/>;
+  if (route === 'home') body = <HomePage go={go} onAdd={onAdd} heroVariant={hero} cardVariant={card} mobile={mobile}/>;
+  else if (route === 'shop') body = <ShopPage go={go} onAdd={onAdd} cardVariant={card} mobile={mobile}/>;
+  else if (route === 'product') body = <ProductPage id={productId} go={go} onAdd={onAdd} mobile={mobile}/>;
+  else if (route === 'cart') body = <CartPage cart={cart} setCart={setCart} go={go} mobile={mobile}/>;
+  else if (route === 'checkout') body = <CheckoutPage cart={cart} go={go} address={address} setAddress={setAddress} mobile={mobile}/>;
+  else if (route === 'payment') body = <PaymentPage cart={cart} go={go} address={address} onPlaceOrder={()=>{}} mobile={mobile}/>;
+  else if (route === 'confirmation') body = <ConfirmationPage cart={cart} address={address} go={go} mobile={mobile}/>;
+  else if (route === 'tracking') body = <TrackingPage go={go} mobile={mobile}/>;
+  else if (route === 'login') body = <LoginPage go={go} mobile={mobile}/>;
+  else if (route === 'account') body = user ? <AccountPage go={go} mobile={mobile}/> : <LoginPage go={go} mobile={mobile}/>;
+  else if (route === 'about') body = <AboutPage go={go} mobile={mobile}/>;
+  else if (route === 'gifts') body = <GiftsPage go={go} onAdd={onAdd} mobile={mobile}/>;
   else if (route === 'admin') body = <AdminPage go={go}/>;
 
   const themeAttr = dark ? 'dark' : theme;

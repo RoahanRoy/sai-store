@@ -21,7 +21,7 @@ function initials(name, email) {
   return src.charAt(0).toUpperCase();
 }
 
-export function CartPage({ cart, setCart, go }) {
+export function CartPage({ cart, setCart, go, mobile }) {
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
   const ship = sub > 999 ? 0 : 99;
   const tax = Math.round(sub * 0.05);
@@ -31,9 +31,9 @@ export function CartPage({ cart, setCart, go }) {
 
   if (cart.length === 0) {
     return (
-      <div style={{padding:'120px 40px',textAlign:'center'}}>
+      <div style={{padding:mobile?'80px 20px':'120px 40px',textAlign:'center'}}>
         <div style={{width:100,height:100,borderRadius:'50%',background:'var(--bg-soft)',display:'grid',placeItems:'center',margin:'0 auto 20px',color:'var(--ink-mute)'}}><Icon.Cart s={42}/></div>
-        <h2 style={{fontSize:36,marginBottom:10}}>Your cart is <span className="italic">empty</span></h2>
+        <h2 style={{fontSize:mobile?28:36,marginBottom:10}}>Your cart is <span className="italic">empty</span></h2>
         <p style={{color:'var(--ink-mute)',marginBottom:24}}>Begin your collection of heirloom vessels.</p>
         <button onClick={()=>go('shop')} className="btn btn-primary btn-lg">Shop the Collection</button>
       </div>
@@ -41,15 +41,34 @@ export function CartPage({ cart, setCart, go }) {
   }
 
   return (
-    <div style={{padding:'40px 40px 80px'}}>
+    <div style={{padding:mobile?'24px 20px 60px':'40px 40px 80px'}}>
       <div style={{fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)',marginBottom:8}}>HOME · CART</div>
-      <h1 style={{fontSize:48,marginBottom:30}}>Your <span className="italic">Cart</span></h1>
-      <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr',gap:40,alignItems:'flex-start'}}>
+      <h1 style={{fontSize:mobile?32:48,marginBottom:mobile?20:30}}>Your <span className="italic">Cart</span></h1>
+      <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1.5fr 1fr',gap:mobile?24:40,alignItems:'flex-start'}}>
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'2fr 100px 100px 80px',padding:'12px 0',borderBottom:'1px solid var(--line)',fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)'}}>
+          {!mobile && <div style={{display:'grid',gridTemplateColumns:'2fr 100px 100px 80px',padding:'12px 0',borderBottom:'1px solid var(--line)',fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)'}}>
             <span>PRODUCT</span><span style={{textAlign:'center'}}>QTY</span><span style={{textAlign:'right'}}>PRICE</span><span></span>
-          </div>
-          {cart.map(it => (
+          </div>}
+          {cart.map(it => mobile ? (
+            <div key={it.cartId} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid var(--line-soft)',alignItems:'flex-start'}}>
+              <div style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0}}><ProdImg kind={it.kind} material={it.material} size={48}/></div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
+                  <div style={{fontFamily:'var(--display)',fontSize:15}}>{it.name}</div>
+                  <button onClick={()=>remove(it.cartId)} style={{background:'none',border:0,cursor:'pointer',color:'var(--ink-mute)',padding:0}}><Icon.Trash/></button>
+                </div>
+                <div style={{fontSize:11,color:'var(--ink-mute)',margin:'2px 0 8px'}}>{it.finish} · {it.size}</div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div style={{display:'inline-flex',alignItems:'center',border:'1px solid var(--line)',borderRadius:999}}>
+                    <button onClick={()=>setQty(it.cartId,it.qty-1)} style={{background:'none',border:0,padding:'6px 10px',cursor:'pointer'}}><Icon.Minus/></button>
+                    <span style={{padding:'0 6px',fontSize:13,minWidth:18,textAlign:'center'}}>{it.qty}</span>
+                    <button onClick={()=>setQty(it.cartId,it.qty+1)} style={{background:'none',border:0,padding:'6px 10px',cursor:'pointer'}}><Icon.Plus/></button>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:600}}>₹{(it.price*it.qty).toLocaleString('en-IN')}</div>
+                </div>
+              </div>
+            </div>
+          ) : (
             <div key={it.cartId} style={{display:'grid',gridTemplateColumns:'2fr 100px 100px 80px',gap:12,padding:'18px 0',borderBottom:'1px solid var(--line-soft)',alignItems:'center'}}>
               <div style={{display:'flex',gap:14,alignItems:'center'}}>
                 <div style={{width:84,height:84,borderRadius:8,overflow:'hidden',flexShrink:0}}><ProdImg kind={it.kind} material={it.material} size={56}/></div>
@@ -72,7 +91,7 @@ export function CartPage({ cart, setCart, go }) {
             <div style={{display:'flex',alignItems:'center',gap:12}}><Icon.Gift/><div><div style={{fontSize:14,fontWeight:500}}>Add ₹{Math.max(0,2500-sub).toLocaleString('en-IN')} more for free engraving</div><div style={{fontSize:12,color:'var(--ink-mute)'}}>Up to 24 characters in Devanagari or Latin script</div></div></div>
           </div>
         </div>
-        <aside style={{position:'sticky',top:90,padding:24,background:'var(--bg-soft)',borderRadius:14,border:'1px solid var(--line)'}}>
+        <aside style={{position:mobile?'static':'sticky',top:90,padding:mobile?18:24,background:'var(--bg-soft)',borderRadius:14,border:'1px solid var(--line)'}}>
           <h3 style={{fontSize:22,marginBottom:18}}>Order Summary</h3>
           <div style={{display:'flex',gap:8,marginBottom:18}}>
             <input placeholder="Promo code" style={{flex:1,padding:'10px 12px',border:'1px solid var(--line)',borderRadius:8,fontSize:13,fontFamily:'var(--body)',background:'var(--bg)'}}/>
@@ -92,24 +111,24 @@ export function CartPage({ cart, setCart, go }) {
   );
 }
 
-function StepBar({ step }) {
+function StepBar({ step, mobile }) {
   const steps = ['Address', 'Payment', 'Confirm'];
   return (
-    <div style={{display:'flex',gap:8,padding:'24px 40px',borderBottom:'1px solid var(--line)',background:'var(--bg-soft)',justifyContent:'center'}}>
+    <div style={{display:'flex',gap:8,padding:mobile?'16px 16px':'24px 40px',borderBottom:'1px solid var(--line)',background:'var(--bg-soft)',justifyContent:'center'}}>
       {steps.map((s,i) => (
         <React.Fragment key={s}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:30,height:30,borderRadius:'50%',display:'grid',placeItems:'center',fontSize:13,background: i<=step?'var(--accent)':'var(--bg)',color: i<=step?'#fff':'var(--ink-mute)',border:`1px solid ${i<=step?'var(--accent)':'var(--line)'}`,fontWeight:500}}>{i < step ? <Icon.Check s={14}/> : i+1}</div>
-            <div style={{fontSize:13,color: i<=step?'var(--ink)':'var(--ink-mute)',fontWeight:i===step?500:400}}>{s}</div>
+          <div style={{display:'flex',alignItems:'center',gap:mobile?6:10}}>
+            <div style={{width:mobile?26:30,height:mobile?26:30,borderRadius:'50%',display:'grid',placeItems:'center',fontSize:13,background: i<=step?'var(--accent)':'var(--bg)',color: i<=step?'#fff':'var(--ink-mute)',border:`1px solid ${i<=step?'var(--accent)':'var(--line)'}`,fontWeight:500}}>{i < step ? <Icon.Check s={14}/> : i+1}</div>
+            <div style={{fontSize:mobile?12:13,color: i<=step?'var(--ink)':'var(--ink-mute)',fontWeight:i===step?500:400}}>{s}</div>
           </div>
-          {i < steps.length-1 && <div style={{width:60,height:1,background: i<step?'var(--accent)':'var(--line)',margin:'0 8px'}}/>}
+          {i < steps.length-1 && <div style={{width:mobile?20:60,height:1,background: i<step?'var(--accent)':'var(--line)',margin:'0 4px'}}/>}
         </React.Fragment>
       ))}
     </div>
   );
 }
 
-export function CheckoutPage({ cart, go, address, setAddress }) {
+export function CheckoutPage({ cart, go, address, setAddress, mobile }) {
   const [selected, setSelected] = React.useState('a1');
   const [showNew, setShowNew] = React.useState(false);
   const [form, setForm] = React.useState({ name:'', phone:'', line:'', city:'', state:'', pin:'' });
@@ -143,10 +162,10 @@ export function CheckoutPage({ cart, go, address, setAddress }) {
 
   return (
     <>
-      <StepBar step={0}/>
-      <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:40,padding:'40px 40px 70px'}}>
+      <StepBar step={0} mobile={mobile}/>
+      <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1.4fr 1fr',gap:mobile?24:40,padding:mobile?'24px 20px 60px':'40px 40px 70px'}}>
         <div>
-          <h1 style={{fontSize:36,marginBottom:8}}>Delivery <span className="italic">Address</span></h1>
+          <h1 style={{fontSize:mobile?28:36,marginBottom:8}}>Delivery <span className="italic">Address</span></h1>
           <p style={{fontSize:13,color:'var(--ink-mute)',marginBottom:24}}>Where should we send your treasures?</p>
 
           {!showNew && (
@@ -172,7 +191,7 @@ export function CheckoutPage({ cart, go, address, setAddress }) {
           )}
 
           {showNew && (
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,padding:24,border:'1px solid var(--line)',borderRadius:12,background:'var(--bg)',marginBottom:18}}>
+            <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14,padding:mobile?16:24,border:'1px solid var(--line)',borderRadius:12,background:'var(--bg)',marginBottom:18}}>
               <div className={`field ${errors.name?'error':''}`} style={{gridColumn:'span 2'}}><label>Full Name</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Aarav Sharma"/>{errors.name && <div className="err">{errors.name}</div>}</div>
               <div className={`field ${errors.phone?'error':''}`}><label>Mobile</label><input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+91 98765 43210"/>{errors.phone && <div className="err">{errors.phone}</div>}</div>
               <div className="field"><label>Email (optional)</label><input placeholder="you@email.com"/></div>
@@ -195,12 +214,12 @@ export function CheckoutPage({ cart, go, address, setAddress }) {
             <div>Estimated delivery <strong>Wed, 29 Apr – Fri, 01 May 2026</strong> via BlueDart Express. Tracking shared on shipment.</div>
           </div>
 
-          <div style={{display:'flex',justifyContent:'space-between',gap:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
             <button onClick={()=>go('cart')} className="btn btn-ghost"><Icon.ArrowLeft/> Back to Cart</button>
-            <button onClick={continueToPayment} className="btn btn-primary btn-lg">Continue to Payment <Icon.ArrowRight/></button>
+            <button onClick={continueToPayment} className="btn btn-primary btn-lg" style={mobile?{flex:1}:{}}>Continue to Payment <Icon.ArrowRight/></button>
           </div>
         </div>
-        <aside style={{padding:24,background:'var(--bg-soft)',borderRadius:14,position:'sticky',top:90,border:'1px solid var(--line)'}}>
+        <aside style={{padding:mobile?18:24,background:'var(--bg-soft)',borderRadius:14,position:mobile?'static':'sticky',top:90,border:'1px solid var(--line)',order:mobile?-1:0}}>
           <h3 style={{fontSize:18,marginBottom:14}}>Your Order ({cart.length})</h3>
           <div style={{maxHeight:280,overflowY:'auto'}}>
             {cart.map(it => (
@@ -226,7 +245,7 @@ export function CheckoutPage({ cart, go, address, setAddress }) {
   );
 }
 
-export function PaymentPage({ cart, go, address, onPlaceOrder }) {
+export function PaymentPage({ cart, go, address, onPlaceOrder, mobile }) {
   const [method, setMethod] = React.useState('upi');
   const [upi, setUpi] = React.useState('aarav@okhdfc');
   const [card, setCard] = React.useState({ num:'', name:'', exp:'', cvv:'' });
@@ -251,10 +270,10 @@ export function PaymentPage({ cart, go, address, onPlaceOrder }) {
 
   return (
     <>
-      <StepBar step={1}/>
-      <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr',gap:40,padding:'40px 40px 70px'}}>
+      <StepBar step={1} mobile={mobile}/>
+      <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1.4fr 1fr',gap:mobile?24:40,padding:mobile?'24px 20px 60px':'40px 40px 70px'}}>
         <div>
-          <h1 style={{fontSize:36,marginBottom:8}}>Payment <span className="italic">Method</span></h1>
+          <h1 style={{fontSize:mobile?28:36,marginBottom:8}}>Payment <span className="italic">Method</span></h1>
           <p style={{fontSize:13,color:'var(--ink-mute)',marginBottom:24,display:'flex',alignItems:'center',gap:8}}><Icon.Lock s={14}/> Encrypted via TLS · PCI DSS compliant</p>
 
           <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
@@ -286,9 +305,9 @@ export function PaymentPage({ cart, go, address, onPlaceOrder }) {
             </div>
           )}
           {method === 'card' && (
-            <div style={{padding:24,background:'var(--bg-soft)',borderRadius:12,marginBottom:24}}>
+            <div style={{padding:mobile?16:24,background:'var(--bg-soft)',borderRadius:12,marginBottom:24}}>
               <h4 style={{fontFamily:'var(--display)',fontSize:18,marginBottom:14}}>Card Details</h4>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div style={{display:'grid',gridTemplateColumns:mobile?'1fr 1fr':'1fr 1fr',gap:14}}>
                 <div className="field" style={{gridColumn:'span 2'}}><label>Card Number</label><input value={card.num} onChange={e=>setCard({...card,num:e.target.value})} placeholder="1234 5678 9012 3456" maxLength={19}/></div>
                 <div className="field" style={{gridColumn:'span 2'}}><label>Cardholder Name</label><input value={card.name} onChange={e=>setCard({...card,name:e.target.value})} placeholder="AARAV SHARMA"/></div>
                 <div className="field"><label>Expiry (MM/YY)</label><input value={card.exp} onChange={e=>setCard({...card,exp:e.target.value})} placeholder="08/29" maxLength={5}/></div>
@@ -306,9 +325,9 @@ export function PaymentPage({ cart, go, address, onPlaceOrder }) {
             <div style={{fontSize:13,color:'var(--ink-soft)'}}>Your payment is protected by <strong>Razorpay's 256-bit encryption</strong> and <strong>2-factor verification</strong>. We never store full card details.</div>
           </div>
 
-          <div style={{display:'flex',justifyContent:'space-between',gap:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
             <button onClick={()=>go('checkout')} className="btn btn-ghost"><Icon.ArrowLeft/> Back</button>
-            <button onClick={pay} disabled={processing} className="btn btn-primary btn-lg">
+            <button onClick={pay} disabled={processing} className="btn btn-primary btn-lg" style={mobile?{flex:1}:{}}>
               {processing ? (
                 <><span className="spin" style={{display:'inline-block',width:16,height:16,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:'50%'}}/> Processing securely...</>
               ) : (
@@ -318,7 +337,7 @@ export function PaymentPage({ cart, go, address, onPlaceOrder }) {
           </div>
         </div>
 
-        <aside style={{padding:24,background:'var(--bg-soft)',borderRadius:14,position:'sticky',top:90,border:'1px solid var(--line)',height:'fit-content'}}>
+        <aside style={{padding:mobile?18:24,background:'var(--bg-soft)',borderRadius:14,position:mobile?'static':'sticky',top:90,border:'1px solid var(--line)',height:'fit-content',order:mobile?-1:0}}>
           <h3 style={{fontSize:18,marginBottom:14}}>Order Total</h3>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:6}}><span style={{color:'var(--ink-mute)'}}>Items ({cart.length})</span><span>₹{sub.toLocaleString('en-IN')}</span></div>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:6}}><span style={{color:'var(--ink-mute)'}}>Shipping</span><span>{ship===0?'FREE':`₹${ship}`}</span></div>
@@ -338,7 +357,7 @@ export function PaymentPage({ cart, go, address, onPlaceOrder }) {
   );
 }
 
-export function ConfirmationPage({ cart, address, go }) {
+export function ConfirmationPage({ cart, address, go, mobile }) {
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
   const ship = sub > 999 ? 0 : 99;
   const tax = Math.round(sub * 0.05);
@@ -347,14 +366,14 @@ export function ConfirmationPage({ cart, address, go }) {
 
   return (
     <>
-      <StepBar step={2}/>
-      <div style={{padding:'50px 40px 70px',maxWidth:760,margin:'0 auto'}}>
-        <div style={{textAlign:'center',marginBottom:40}}>
+      <StepBar step={2} mobile={mobile}/>
+      <div style={{padding:mobile?'30px 20px 60px':'50px 40px 70px',maxWidth:760,margin:'0 auto'}}>
+        <div style={{textAlign:'center',marginBottom:mobile?28:40}}>
           <div className="bouncein" style={{width:96,height:96,borderRadius:'50%',background:'rgba(14,107,107,.1)',border:'2px solid var(--peacock)',margin:'0 auto 18px',display:'grid',placeItems:'center',position:'relative'}}>
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--peacock)" strokeWidth="3" className="check-anim"><path d="m10 20 7 7 14-15" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <div className="ornament" style={{maxWidth:140,margin:'0 auto 14px'}}>श्री</div>
-          <h1 style={{fontSize:48,marginBottom:10}}>Thank you, <span className="italic" style={{color:'var(--accent)'}}>{address?.name?.split(' ')[0] || 'friend'}</span></h1>
+          <h1 style={{fontSize:mobile?32:48,marginBottom:10}}>Thank you, <span className="italic" style={{color:'var(--accent)'}}>{address?.name?.split(' ')[0] || 'friend'}</span></h1>
           <p style={{fontSize:16,color:'var(--ink-soft)',maxWidth:480,margin:'0 auto'}}>Your order has been placed. A confirmation has been sent to your email and mobile.</p>
         </div>
 
@@ -394,7 +413,7 @@ export function ConfirmationPage({ cart, address, go }) {
           )}
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:30}}>
+        <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14,marginBottom:30}}>
           <button onClick={()=>go('tracking')} className="btn btn-primary btn-lg">Track Order <Icon.ArrowRight/></button>
           <button onClick={()=>go('home')} className="btn btn-ghost btn-lg">Continue Shopping</button>
         </div>
@@ -408,7 +427,7 @@ export function ConfirmationPage({ cart, address, go }) {
   );
 }
 
-export function TrackingPage({ go }) {
+export function TrackingPage({ go, mobile }) {
   const steps = [
     { t:'Order Placed', d:'21 Apr · 14:30', done:true, sub:'Confirmation sent to email & SMS' },
     { t:'Preparing in Workshop', d:'22 Apr · Moradabad', done:true, sub:'Polished by artisan Manjeet Tamrakar' },
@@ -417,12 +436,12 @@ export function TrackingPage({ go }) {
     { t:'Delivered', d:'Expected 29 Apr', done:false, sub:'Please be available to accept' },
   ];
   return (
-    <div style={{padding:'40px 40px 80px',maxWidth:880,margin:'0 auto'}}>
+    <div style={{padding:mobile?'24px 20px 60px':'40px 40px 80px',maxWidth:880,margin:'0 auto'}}>
       <div style={{fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)',marginBottom:8}}>HOME · ACCOUNT · TRACK ORDER</div>
-      <h1 style={{fontSize:42,marginBottom:6}}>Track <span className="italic">your order</span></h1>
-      <div style={{fontFamily:'var(--mono)',fontSize:14,color:'var(--ink-soft)',marginBottom:30}}>SAI-2087-4412 · placed on 21 Apr 2026</div>
+      <h1 style={{fontSize:mobile?28:42,marginBottom:6}}>Track <span className="italic">your order</span></h1>
+      <div style={{fontFamily:'var(--mono)',fontSize:mobile?12:14,color:'var(--ink-soft)',marginBottom:mobile?20:30}}>SAI-2087-4412 · placed on 21 Apr 2026</div>
 
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:30}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:mobile?10:14,marginBottom:mobile?20:30}}>
         {[
           {l:'Carrier', v:'BlueDart Express'},
           {l:'AWB / Tracking', v:'88412390-IN'},
@@ -436,7 +455,7 @@ export function TrackingPage({ go }) {
         ))}
       </div>
 
-      <div style={{padding:30,background:'var(--bg)',border:'1px solid var(--line)',borderRadius:14}}>
+      <div style={{padding:mobile?20:30,background:'var(--bg)',border:'1px solid var(--line)',borderRadius:14}}>
         <h3 style={{fontSize:22,marginBottom:24}}>Journey of your parcel</h3>
         {steps.map((s,i) => (
           <div key={s.t} style={{display:'flex',gap:18,position:'relative',paddingBottom: i<steps.length-1?28:0}}>
@@ -463,7 +482,7 @@ export function TrackingPage({ go }) {
   );
 }
 
-export function LoginPage({ go }) {
+export function LoginPage({ go, mobile }) {
   const [mode, setMode] = React.useState('signin');
   const [phone, setPhone] = React.useState('');
   const [otp, setOtp] = React.useState('');
@@ -471,12 +490,12 @@ export function LoginPage({ go }) {
   const [err, setErr] = React.useState('');
 
   return (
-    <div style={{minHeight:600,display:'grid',gridTemplateColumns:'1fr 1fr'}}>
-      <div style={{padding:'70px 70px',display:'flex',flexDirection:'column',justifyContent:'center',background:'var(--bg)'}}>
+    <div style={{minHeight:mobile?'auto':600,display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr'}}>
+      <div style={{padding:mobile?'30px 24px 50px':'70px 70px',display:'flex',flexDirection:'column',justifyContent:'center',background:'var(--bg)'}}>
         <SaiMark/>
-        <div style={{marginTop:50}}>
+        <div style={{marginTop:mobile?28:50}}>
           <div className="tiny" style={{color:'var(--accent)',marginBottom:10}}>{mode==='signin'?'WELCOME BACK':'BEGIN YOUR JOURNEY'}</div>
-          <h1 style={{fontSize:42,marginBottom:8,lineHeight:1.05}}>{mode==='signin' ? <>Sign in to <span className="italic">Sai Store</span></> : <>Create your <span className="italic">account</span></>}</h1>
+          <h1 style={{fontSize:mobile?30:42,marginBottom:8,lineHeight:1.05}}>{mode==='signin' ? <>Sign in to <span className="italic">Sai Store</span></> : <>Create your <span className="italic">account</span></>}</h1>
           <p style={{fontSize:14,color:'var(--ink-mute)',marginBottom:30}}>{mode==='signin'?'We\'ll send a one-time code to your mobile.':'Join 32k+ households who treasure heritage utensils.'}</p>
 
           {stage === 'phone' && (
@@ -535,19 +554,19 @@ export function LoginPage({ go }) {
           </div>
         </div>
       </div>
-      <div style={{position:'relative',background:'var(--bg-deep)',display:'grid',placeItems:'center',overflow:'hidden'}}>
+      {!mobile && <div style={{position:'relative',background:'var(--bg-deep)',display:'grid',placeItems:'center',overflow:'hidden'}}>
         <ProdImg kind="diya" material="brass" big size={180} ratio="auto" label=""/>
         <div style={{position:'absolute',inset:0,padding:60,display:'flex',flexDirection:'column',justifyContent:'flex-end',background:'linear-gradient(to top, rgba(20,15,10,.6), transparent 60%)',color:'#fff'}}>
           <div className="ornament" style={{maxWidth:120,marginBottom:14,color:'var(--marigold)'}}>श्री</div>
           <h2 style={{fontSize:36,maxWidth:380,lineHeight:1.05}}>“The fire is older than most of us — only the hands change.”</h2>
           <p style={{fontSize:13,marginTop:14,opacity:.8}}>— Manjeet Tamrakar, Master Brass Artisan, Moradabad</p>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
 
-export function AccountPage({ go }) {
+export function AccountPage({ go, mobile }) {
   const { user, refresh, logout } = React.useContext(AuthContext);
   const initialTab = user && !user.profile_complete ? 'settings' : 'orders';
   const [tab, setTab] = React.useState(initialTab);
@@ -571,9 +590,9 @@ export function AccountPage({ go }) {
   const materialThumb = ['brass','copper'];
 
   return (
-    <div style={{padding:'40px 40px 80px'}}>
+    <div style={{padding:mobile?'24px 20px 60px':'40px 40px 80px'}}>
       <div style={{fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)',marginBottom:6}}>HOME · MY ACCOUNT</div>
-      <h1 style={{fontSize:48,marginBottom:8}}>Namaste, <span className="italic" style={{color:'var(--accent)'}}>{firstName(displayName)}</span></h1>
+      <h1 style={{fontSize:mobile?32:48,marginBottom:8}}>Namaste, <span className="italic" style={{color:'var(--accent)'}}>{firstName(displayName)}</span></h1>
       <p style={{fontSize:14,color:'var(--ink-mute)',marginBottom:30}}>
         {memberSince ? `Member since ${memberSince}` : 'Welcome to Sai Store'} · {orderCount} order{orderCount===1?'':'s'} · Heritage Member
       </p>
@@ -587,8 +606,8 @@ export function AccountPage({ go }) {
         </div>
       )}
 
-      <div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:32}}>
-        <aside>
+      <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'240px 1fr',gap:mobile?20:32}}>
+        <aside style={mobile?{display:'flex',flexDirection:'column',gap:0,overflowX:'visible'}:undefined}>
           <div style={{padding:18,background:'var(--bg-soft)',borderRadius:12,marginBottom:14}}>
             {user.avatar_url
               ? <img src={user.avatar_url} alt="" style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',marginBottom:10}}/>
@@ -625,7 +644,7 @@ export function AccountPage({ go }) {
                   {orders.map((o, i) => {
                     const placed = o.placed_at ? new Date(o.placed_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
                     return (
-                      <div key={o.id} className="card" style={{padding:20,display:'grid',gridTemplateColumns:'auto 1fr auto auto',gap:20,alignItems:'center'}}>
+                      <div key={o.id} className="card" style={{padding:mobile?14:20,display:'grid',gridTemplateColumns:mobile?'auto 1fr auto':'auto 1fr auto auto',gap:mobile?12:20,alignItems:'center'}}>
                         <div style={{width:60,height:60,borderRadius:8,overflow:'hidden'}}><ProdImg kind={productThumb[i % 4]} material={materialThumb[i % 2]} size={40}/></div>
                         <div>
                           <div style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--ink-mute)'}}>{o.id}</div>
@@ -644,7 +663,7 @@ export function AccountPage({ go }) {
           {tab === 'addresses' && (
             <>
               <h2 style={{fontSize:24,marginBottom:18}}>Saved Addresses</h2>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14}}>
                 {addresses.map(a => (
                   <div key={a.id} className="card" style={{padding:20,position:'relative'}}>
                     <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
@@ -675,14 +694,14 @@ export function AccountPage({ go }) {
               <p style={{maxWidth:400,fontSize:14,opacity:.9,marginTop:8}}>Earn 1 point per ₹100 spent. Redeem 100 points for ₹50 off your next order.</p>
             </div>
           )}
-          {tab === 'settings' && <AccountSettings user={user} refresh={refresh}/>}
+          {tab === 'settings' && <AccountSettings user={user} refresh={refresh} mobile={mobile}/>}
         </div>
       </div>
     </div>
   );
 }
 
-function AccountSettings({ user, refresh }) {
+function AccountSettings({ user, refresh, mobile }) {
   const [form, setForm] = React.useState({
     name: user.name || '',
     phone: user.phone || '',
@@ -720,7 +739,7 @@ function AccountSettings({ user, refresh }) {
       <p style={{fontSize:13,color:'var(--ink-mute)',marginBottom:18}}>
         {missing ? 'Please complete the fields below — we use these to ship orders and send delivery updates.' : 'Update your details any time.'}
       </p>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,maxWidth:600}}>
+      <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14,maxWidth:600}}>
         <div className="field"><label>Full Name *</label><input value={form.name} onChange={e=>set('name', e.target.value)} placeholder="Your full name"/></div>
         <div className="field"><label>Email</label><input value={user.email || ''} disabled/></div>
         <div className="field"><label>Mobile *</label><input value={form.phone} onChange={e=>set('phone', e.target.value)} placeholder="+91 98765 43210"/></div>

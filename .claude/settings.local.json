@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vite *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(node db/run-sql.mjs db/migrations/0004_user_profile.sql)",
+      "Bash(npm install *)",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel project *)",
+      "Bash(vercel blob *)"
+    ]
+  }
+}

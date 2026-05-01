@@ -152,7 +152,7 @@ function Orders() {
                   <Td>{fmtMoney(o.total)}</Td>
                   <Td><StatusPill status={o.status}/></Td>
                   <Td>
-                    <button onClick={()=>setOpen(o.id)} style={{padding:'6px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>View</button>
+                    <button onClick={()=>setOpen(o.id)} style={{padding:'6px 10px',border:'1px solid var(--line)',borderRadius:6,background:'var(--bg)',cursor:'pointer',fontSize:12}}>View</button>
                   </Td>
                 </tr>
               ))}
@@ -200,7 +200,7 @@ function OrderModal({ id, onClose }) {
 
   return (
     <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',zIndex:200,display:'grid',placeItems:'center',padding:20}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,maxWidth:720,width:'100%',maxHeight:'85vh',overflow:'auto',padding:28}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:'var(--bg)',borderRadius:14,maxWidth:720,width:'100%',maxHeight:'85vh',overflow:'auto',padding:28}}>
         {!order ? <div>Loading…</div> : (
           <>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:18}}>
@@ -397,8 +397,8 @@ function Products() {
                   </Td>
                   <Td>
                     <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>setEditing(p)} style={{padding:'6px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>Edit</button>
-                      <button onClick={()=>onDelete(p)} style={{padding:'6px 10px',border:'1px solid #dc2626',borderRadius:6,background:'#fff',color:'#dc2626',cursor:'pointer',fontSize:12}}>Delete</button>
+                      <button onClick={()=>setEditing(p)} style={{padding:'6px 10px',border:'1px solid var(--line)',borderRadius:6,background:'var(--bg)',cursor:'pointer',fontSize:12}}>Edit</button>
+                      <button onClick={()=>onDelete(p)} style={{padding:'6px 10px',border:'1px solid #dc2626',borderRadius:6,background:'var(--bg)',color:'#dc2626',cursor:'pointer',fontSize:12}}>Delete</button>
                     </div>
                   </Td>
                 </tr>
@@ -463,7 +463,7 @@ export function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
   return (
     <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:200,display:'grid',placeItems:'center',padding:20}}>
       <form onClick={e=>e.stopPropagation()} onSubmit={save}
-        style={{background:'#fff',borderRadius:14,maxWidth:820,width:'100%',maxHeight:'90vh',overflow:'auto',padding:28}}>
+        style={{background:'var(--bg)',borderRadius:14,maxWidth:820,width:'100%',maxHeight:'90vh',overflow:'auto',padding:28}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:18}}>
           <div>
             <div style={{fontSize:11,letterSpacing:'.14em',color:'var(--ink-mute)'}}>{isNew ? 'NEW PRODUCT' : 'EDIT PRODUCT'}</div>
@@ -536,7 +536,7 @@ export function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
         <ImageList images={form.images || []} onChange={imgs => set('images', imgs)}/>
 
         <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:22}}>
-          <button type="button" onClick={onClose} style={{padding:'10px 18px',border:'1px solid var(--line)',borderRadius:8,background:'#fff',cursor:'pointer',fontSize:13}}>Cancel</button>
+          <button type="button" onClick={onClose} style={{padding:'10px 18px',border:'1px solid var(--line)',borderRadius:8,background:'var(--bg)',cursor:'pointer',fontSize:13}}>Cancel</button>
           <button type="submit" disabled={saving}
             style={{padding:'10px 22px',border:0,borderRadius:8,background:'var(--accent)',color:'#fff',cursor:'pointer',fontSize:13,fontWeight:500,opacity:saving?.6:1}}>
             {saving ? 'Saving…' : (isNew ? 'Create product' : 'Save changes')}
@@ -610,8 +610,8 @@ function ImageList({ images, onChange }) {
             <input value={u} onChange={e=>update(i, e.target.value)} placeholder="https://…" style={{...inputCss,marginTop:0}}/>
             {i === 0
               ? <span style={{fontSize:10,letterSpacing:'.1em',color:'var(--accent)',padding:'4px 6px'}}>HERO</span>
-              : <button type="button" onClick={()=>moveUp(i)} title="Make hero" style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>↑</button>}
-            <button type="button" onClick={()=>remove(i)} style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>Remove</button>
+              : <button type="button" onClick={()=>moveUp(i)} title="Make hero" style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'var(--bg)',cursor:'pointer',fontSize:12}}>↑</button>}
+            <button type="button" onClick={()=>remove(i)} style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'var(--bg)',cursor:'pointer',fontSize:12}}>Remove</button>
           </div>
         ))}
         <button type="button" onClick={add}
@@ -674,7 +674,7 @@ export function AdminEditProductButton({ product, style }) {
       <button onClick={open} disabled={loading}
         style={{
           padding:'6px 10px', border:'1px solid var(--line)', borderRadius:6,
-          background:'#fff', cursor:'pointer', fontSize:11, letterSpacing:'.08em',
+          background:'var(--bg)', cursor:'pointer', fontSize:11, letterSpacing:'.08em',
           textTransform:'uppercase', color:'var(--ink)',
           ...style,
         }}>

@@ -24,7 +24,7 @@ function getInitialRoute(fallback) {
   return fallback;
 }
 
-function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = false, theme, typeset, hero, card, dark, festive }) {
+function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = false, theme, typeset, hero, card, dark: darkProp, festive }) {
   const [route, setRoute] = React.useState(() => getInitialRoute(initialRoute));
   const [productId, setProductId] = React.useState(initialId);
   const [cart, setCart] = React.useState(initialCart || []);
@@ -34,6 +34,27 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
   const [address, setAddress] = React.useState(null);
   const [pinging, setPinging] = React.useState(false);
   const [user, setUser] = React.useState(null);
+  const [dark, setDark] = React.useState(() => {
+    if (typeof window === 'undefined') return !!darkProp;
+    const stored = window.localStorage.getItem('sai:dark');
+    if (stored === '1') return true;
+    if (stored === '0') return false;
+    return !!darkProp;
+  });
+  React.useEffect(() => {
+    try { window.localStorage.setItem('sai:dark', dark ? '1' : '0'); } catch {}
+  }, [dark]);
+  // Promote theme to <html> so body / scroll background follow the dark palette.
+  const themeAttrEffect = dark ? 'dark' : theme;
+  React.useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.setAttribute('data-theme', themeAttrEffect);
+    document.documentElement.setAttribute('data-typeset', typeset);
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.removeAttribute('data-typeset');
+    };
+  }, [themeAttrEffect, typeset]);
 
   const refreshUser = React.useCallback(async () => {
     try { setUser(await api.me()); } catch { setUser(null); }
@@ -108,6 +129,21 @@ function StoreApp({ initialRoute = 'home', initialId, initialCart, mobile = fals
           <Icon.Check s={16}/> Added to cart
         </div>
       )}
+      <button
+        onClick={() => setDark(d => !d)}
+        title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-label="Toggle dark mode"
+        style={{
+          position:'fixed', right:18, bottom:18, zIndex:120,
+          width:40, height:40, borderRadius:'50%',
+          background:'var(--bg)', color:'var(--ink)',
+          border:'1px solid var(--line)',
+          boxShadow:'var(--shadow)',
+          cursor:'pointer', display:'grid', placeItems:'center',
+          transition:'background .15s, color .15s, border-color .15s',
+        }}>
+        {dark ? <Icon.Sun s={18}/> : <Icon.Moon s={18}/>}
+      </button>
     </div>
     </AuthContext.Provider>
   );

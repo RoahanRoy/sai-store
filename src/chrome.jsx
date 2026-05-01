@@ -1,6 +1,7 @@
 import React from 'react';
 import { PRODUCTS } from './data.js';
 import { Icon, ProdImg, SaiMark, Stars } from './primitives.jsx';
+import { AdminEditProductButton } from './admin.jsx';
 
 export function FestiveStrip({ show }) {
   if (!show) return null;
@@ -171,6 +172,9 @@ export function ProductCard({ p, onClick, variant = 'default', onAdd }) {
         <button style={{position:'absolute',bottom:10,right:10,width:34,height:34,borderRadius:'50%',background:'var(--bg)',border:'1px solid var(--line)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--ink-soft)',opacity:hover?1:0,transition:'opacity .15s'}}>
           <Icon.Heart s={14}/>
         </button>
+        <div style={{position:'absolute',bottom:10,left:10}} onClick={e=>e.stopPropagation()}>
+          <AdminEditProductButton product={p}/>
+        </div>
       </div>
       <div style={{padding:'14px 14px 16px'}}>
         <div style={{fontSize:11,color:'var(--ink-mute)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>{p.cat}</div>

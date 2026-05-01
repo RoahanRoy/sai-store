@@ -1,9 +1,33 @@
-import { Router } from 'express';
+import { Router, raw } from 'express';
+import { put } from '@vercel/blob';
 import { query } from '../db/pool.js';
 import { requireAdmin } from '../auth.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAdmin);
+
+// Image upload — receives raw bytes, streams to Vercel Blob, returns public URL.
+// Client sends: POST /api/admin/upload?filename=foo.jpg with Content-Type: image/jpeg
+adminRouter.post('/upload', raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+  try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return res.status(500).json({ error: 'BLOB_READ_WRITE_TOKEN not configured' });
+    }
+    const filename = (req.query.filename || 'upload.bin').toString().replace(/[^\w.\-]/g, '_');
+    const contentType = req.headers['content-type'] || 'application/octet-stream';
+    if (!req.body || !req.body.length) return res.status(400).json({ error: 'empty body' });
+    const blob = await put(`products/${Date.now()}-${filename}`, req.body, {
+      access: 'public',
+      contentType,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+      addRandomSuffix: true,
+    });
+    res.json({ url: blob.url });
+  } catch (e) {
+    console.error('[upload]', e);
+    res.status(500).json({ error: 'upload_failed', detail: e.message });
+  }
+});
 
 adminRouter.get('/stats', async (_req, res) => {
   const [{ rows: u }, { rows: o }, { rows: r }, { rows: today }] = await Promise.all([

@@ -423,7 +423,7 @@ function Products() {
   );
 }
 
-function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
+export function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
   const [form, setForm] = React.useState(() => ({
     ...EMPTY_PRODUCT,
     ...initial,
@@ -548,18 +548,69 @@ function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
 }
 
 function ImageList({ images, onChange }) {
+  const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const [drag, setDrag] = React.useState(false);
+  const fileInput = React.useRef(null);
+
   function update(i, v) { onChange(images.map((u, j) => j === i ? v : u)); }
   function add() { onChange([...images, '']); }
   function remove(i) { onChange(images.filter((_, j) => j !== i)); }
+  function moveUp(i) {
+    if (i === 0) return;
+    const next = images.slice();
+    [next[i-1], next[i]] = [next[i], next[i-1]];
+    onChange(next);
+  }
+
+  async function uploadFiles(files) {
+    if (!files || !files.length) return;
+    setError(null); setUploading(true);
+    try {
+      const urls = [];
+      for (const f of files) {
+        if (!f.type.startsWith('image/')) throw new Error(`${f.name} is not an image`);
+        const { url } = await api.adminUploadImage(f);
+        urls.push(url);
+      }
+      onChange([...(images || []).filter(Boolean), ...urls]);
+    } catch (e) {
+      setError(e.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = '';
+    }
+  }
+
   return (
-    <Field label="Images" hint="Image URLs — first one is the hero. Add as many as you need.">
+    <Field label="Images" hint="First image is the hero. Drop files, click to pick, or paste a URL.">
       <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        <div
+          onDragOver={e=>{e.preventDefault();setDrag(true);}}
+          onDragLeave={()=>setDrag(false)}
+          onDrop={e=>{e.preventDefault();setDrag(false);uploadFiles(Array.from(e.dataTransfer.files||[]));}}
+          onClick={()=>fileInput.current?.click()}
+          style={{
+            border:`2px dashed ${drag?'var(--accent)':'var(--line)'}`,
+            background:drag?'rgba(0,0,0,.02)':'var(--bg-soft)',
+            borderRadius:10, padding:'18px 14px', textAlign:'center',
+            cursor:'pointer', fontSize:13, color:'var(--ink-mute)'
+          }}>
+          {uploading ? 'Uploading…' : (drag ? 'Drop to upload' : 'Drop image files here, or click to choose')}
+          <input ref={fileInput} type="file" accept="image/*" multiple style={{display:'none'}}
+            onChange={e=>uploadFiles(Array.from(e.target.files||[]))}/>
+        </div>
+        {error && <div style={{fontSize:12,color:'#c00'}}>{error}</div>}
+
         {images.map((u, i) => (
           <div key={i} style={{display:'flex',gap:8,alignItems:'center'}}>
             <div style={{width:44,height:44,borderRadius:6,border:'1px solid var(--line)',overflow:'hidden',flexShrink:0,background:'var(--bg-soft)'}}>
               {u && <img src={u} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>}
             </div>
             <input value={u} onChange={e=>update(i, e.target.value)} placeholder="https://…" style={{...inputCss,marginTop:0}}/>
+            {i === 0
+              ? <span style={{fontSize:10,letterSpacing:'.1em',color:'var(--accent)',padding:'4px 6px'}}>HERO</span>
+              : <button type="button" onClick={()=>moveUp(i)} title="Make hero" style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>↑</button>}
             <button type="button" onClick={()=>remove(i)} style={{padding:'8px 10px',border:'1px solid var(--line)',borderRadius:6,background:'#fff',cursor:'pointer',fontSize:12}}>Remove</button>
           </div>
         ))}
@@ -569,6 +620,76 @@ function ImageList({ images, onChange }) {
         </button>
       </div>
     </Field>
+  );
+}
+
+// ---- Inline Edit button for the public Shop / cards ----
+// Looks up the product in the DB; if missing, prefills a "new" form from the passed object.
+export function AdminEditProductButton({ product, style }) {
+  const { user } = React.useContext(AuthContext);
+  const [editing, setEditing] = React.useState(null);
+  const [isNew, setIsNew] = React.useState(false);
+  const [cats, setCats] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+
+  if (!user || !user.is_admin) return null;
+
+  async function open(e) {
+    e.preventDefault(); e.stopPropagation();
+    setLoading(true);
+    try {
+      const [catsRes, dbProduct] = await Promise.all([
+        api.adminCategories().catch(() => []),
+        api.adminProduct(product.id).catch(() => null),
+      ]);
+      setCats(catsRes || []);
+      if (dbProduct) {
+        setIsNew(false);
+        setEditing(dbProduct);
+      } else {
+        setIsNew(true);
+        setEditing({
+          ...EMPTY_PRODUCT,
+          id: product.id || '',
+          name: product.name || '',
+          sub: product.sub || '',
+          material: product.material || 'brass',
+          kind: product.kind || '',
+          price: product.price || '',
+          mrp: product.mrp || '',
+          rating: product.rating || '',
+          reviews: product.reviews || 0,
+          finish: product.finish || [],
+          size: product.size || [],
+          badge: product.badge || '',
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <button onClick={open} disabled={loading}
+        style={{
+          padding:'6px 10px', border:'1px solid var(--line)', borderRadius:6,
+          background:'#fff', cursor:'pointer', fontSize:11, letterSpacing:'.08em',
+          textTransform:'uppercase', color:'var(--ink)',
+          ...style,
+        }}>
+        {loading ? '…' : (isNew ? 'Edit' : 'Edit')}
+      </button>
+      {editing && (
+        <ProductForm
+          initial={editing}
+          isNew={isNew}
+          categories={cats}
+          onClose={()=>setEditing(null)}
+          onSaved={()=>setEditing(null)}
+        />
+      )}
+    </>
   );
 }
 

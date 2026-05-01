@@ -60,4 +60,18 @@ export const api = {
   adminUpdateProduct: (id, p) => req(`/api/admin/products/${id}`, { method: 'PATCH', body: JSON.stringify(p) }),
   adminDeleteProduct: (id) => req(`/api/admin/products/${id}`, { method: 'DELETE' }),
   adminCategories: () => req('/api/admin/categories'),
+  adminUploadImage: async (file) => {
+    const r = await fetch(`/api/admin/upload?filename=${encodeURIComponent(file.name || 'image')}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    });
+    if (!r.ok) {
+      let detail = '';
+      try { const j = await r.json(); detail = j?.error || j?.detail || ''; } catch {}
+      throw new Error(detail ? `${r.status} ${detail}` : `${r.status} ${r.statusText}`);
+    }
+    return r.json();
+  },
 };

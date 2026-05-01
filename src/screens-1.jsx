@@ -363,7 +363,7 @@ export function ProductPage({ id, go, onAdd, addPing }) {
               <Icon.Cart s={16}/> Add to Cart · ₹{(p.price*qty).toLocaleString('en-IN')}
             </button>
           </div>
-          <button className="btn btn-dark btn-block btn-lg" style={{marginBottom:18}}>Buy It Now</button>
+          <button onClick={()=>{onAdd({...p, finish, size, qty}); go('checkout');}} className="btn btn-dark btn-block btn-lg" style={{marginBottom:18}}>Buy It Now</button>
 
           <div style={{padding:14,background:'var(--bg-soft)',borderRadius:10,fontSize:12,display:'flex',gap:10,alignItems:'center',marginBottom:24}}>
             <Icon.MapPin/>

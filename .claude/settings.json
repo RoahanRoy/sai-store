@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(yes)",
-      "Bash(vercel env *)",
-      "Bash(git commit -m ' *)"
-    ]
-  }
-}

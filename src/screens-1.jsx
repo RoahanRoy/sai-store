@@ -3,6 +3,7 @@ import React from 'react';
 import { PRODUCTS, CATEGORIES, REVIEWS_SAMPLE } from './data.js';
 import { Icon, ProdImg, Stars } from './primitives.jsx';
 import { ProductCard } from './chrome.jsx';
+import { AdminEditProductButton } from './admin.jsx';
 
 function Hero({ variant = 'editorial', go }) {
   if (variant === 'split') {
@@ -310,7 +311,10 @@ export function ProductPage({ id, go, onAdd, addPing }) {
         </div>
 
         <div>
-          <div className="tiny" style={{color:'var(--accent)',marginBottom:8}}>{p.cat}</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:8}}>
+            <div className="tiny" style={{color:'var(--accent)'}}>{p.cat}</div>
+            <AdminEditProductButton product={p}/>
+          </div>
           <h1 style={{fontSize:42,marginBottom:6}}>{p.name}</h1>
           <p style={{fontStyle:'italic',color:'var(--ink-mute)',marginBottom:14,fontSize:15}}>{p.sub}</p>
           <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:24}}>

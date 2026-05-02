@@ -7,6 +7,8 @@ import { AdminEditProductButton } from './admin.jsx';
 import { useProducts, useProduct } from './products-store.js';
 
 function Hero({ variant = 'editorial', go, mobile }) {
+  const heroProduct = useProduct('p2');
+  const heroImg = (heroProduct?.images || []).find(Boolean);
   if (variant === 'split') {
     return (
       <section style={{display:'grid',gridTemplateColumns: mobile?'1fr':'1fr 1fr',minHeight: mobile?'auto':520,borderBottom:'1px solid var(--line)'}}>
@@ -74,9 +76,11 @@ function Hero({ variant = 'editorial', go, mobile }) {
             <span>✓ COD across India</span>
           </div>
         </div>
-        <div style={{position:'relative',aspectRatio:'4/5'}}>
+        <div onClick={()=>go('product','p2')} style={{position:'relative',aspectRatio:'4/5',cursor:'pointer'}}>
           <div style={{position:'absolute',inset:0,background:'var(--bg-deep)',borderRadius:'200px 200px 12px 12px',overflow:'hidden'}}>
-            <ProdImg kind="bottle" material="copper" big size={180} ratio="auto" label=""/>
+            {heroImg
+              ? <img src={heroImg} alt={heroProduct?.name || 'Tamra Copper Bottle'} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+              : <ProdImg kind="bottle" material="copper" big size={180} ratio="auto" label=""/>}
           </div>
           <div style={{position:'absolute',top:30,right:-20,width:120,height:120,background:'var(--accent)',color:'#fff',borderRadius:'50%',display:'grid',placeItems:'center',textAlign:'center',fontFamily:'var(--display)',fontStyle:'italic',fontSize:13,padding:14,lineHeight:1.2,transform:'rotate(8deg)'}}>
             <div>Tamra<br/>Copper Bottle<br/><span style={{fontStyle:'normal',fontSize:11,letterSpacing:'.1em'}}>FROM ₹1,899</span></div>

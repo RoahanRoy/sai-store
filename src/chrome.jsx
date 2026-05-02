@@ -297,7 +297,7 @@ export function CartDrawer({ open, onClose, cart, setCart, go }) {
             <div className="scroll-y" style={{flex:1,padding:'8px 24px'}}>
               {cart.map(it => (
                 <div key={it.cartId} style={{display:'flex',gap:14,padding:'16px 0',borderBottom:'1px solid var(--line-soft)'}}>
-                  <div style={{width:80,height:80,flexShrink:0,borderRadius:8,overflow:'hidden'}}><ProdImg kind={it.kind} material={it.material} size={56}/></div>
+                  <div style={{width:80,height:80,flexShrink:0,borderRadius:8,overflow:'hidden'}}>{(Array.isArray(it.images) && it.images.find(Boolean)) ? <img src={it.images.find(Boolean)} alt={it.name||''} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/> : <ProdImg kind={it.kind} material={it.material} size={56}/>}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontFamily:'var(--display)',fontSize:15,marginBottom:2}}>{it.name}</div>
                     <div style={{fontSize:11,color:'var(--ink-mute)',marginBottom:8}}>{it.finish} · {it.size}</div>

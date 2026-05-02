@@ -21,6 +21,12 @@ function initials(name, email) {
   return src.charAt(0).toUpperCase();
 }
 
+function CartItemImage({ it, size = 48 }) {
+  const img = Array.isArray(it.images) ? it.images.find(Boolean) : null;
+  if (!img) return <ProdImg kind={it.kind} material={it.material} size={size}/>;
+  return <img src={img} alt={it.name || ''} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>;
+}
+
 export function CartPage({ cart, setCart, go, mobile }) {
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
   const ship = sub > 999 ? 0 : 99;
@@ -51,7 +57,7 @@ export function CartPage({ cart, setCart, go, mobile }) {
           </div>}
           {cart.map(it => mobile ? (
             <div key={it.cartId} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid var(--line-soft)',alignItems:'flex-start'}}>
-              <div style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0}}><ProdImg kind={it.kind} material={it.material} size={48}/></div>
+              <div style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0}}><CartItemImage it={it} size={48}/></div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:'flex',justifyContent:'space-between',gap:8}}>
                   <div style={{fontFamily:'var(--display)',fontSize:15}}>{it.name}</div>
@@ -71,7 +77,7 @@ export function CartPage({ cart, setCart, go, mobile }) {
           ) : (
             <div key={it.cartId} style={{display:'grid',gridTemplateColumns:'2fr 100px 100px 80px',gap:12,padding:'18px 0',borderBottom:'1px solid var(--line-soft)',alignItems:'center'}}>
               <div style={{display:'flex',gap:14,alignItems:'center'}}>
-                <div style={{width:84,height:84,borderRadius:8,overflow:'hidden',flexShrink:0}}><ProdImg kind={it.kind} material={it.material} size={56}/></div>
+                <div style={{width:84,height:84,borderRadius:8,overflow:'hidden',flexShrink:0}}><CartItemImage it={it} size={56}/></div>
                 <div>
                   <div style={{fontFamily:'var(--display)',fontSize:17}}>{it.name}</div>
                   <div style={{fontSize:12,color:'var(--ink-mute)',margin:'4px 0'}}>{it.finish} · {it.size}</div>
@@ -224,7 +230,7 @@ export function CheckoutPage({ cart, go, address, setAddress, mobile }) {
           <div style={{maxHeight:280,overflowY:'auto'}}>
             {cart.map(it => (
               <div key={it.cartId} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px dashed var(--line)'}}>
-                <div style={{width:54,height:54,borderRadius:6,overflow:'hidden',position:'relative'}}><ProdImg kind={it.kind} material={it.material} size={36}/><span style={{position:'absolute',top:-4,right:-4,background:'var(--ink)',color:'var(--bg)',fontSize:10,minWidth:18,height:18,borderRadius:9,display:'grid',placeItems:'center',padding:'0 5px'}}>{it.qty}</span></div>
+                <div style={{width:54,height:54,borderRadius:6,overflow:'hidden',position:'relative'}}><CartItemImage it={it} size={36}/><span style={{position:'absolute',top:-4,right:-4,background:'var(--ink)',color:'var(--bg)',fontSize:10,minWidth:18,height:18,borderRadius:9,display:'grid',placeItems:'center',padding:'0 5px'}}>{it.qty}</span></div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:13}}>{it.name}</div>
                   <div style={{fontSize:11,color:'var(--ink-mute)'}}>{it.finish} · {it.size}</div>
@@ -395,7 +401,7 @@ export function ConfirmationPage({ cart, address, go, mobile }) {
 
           {cart.map(it => (
             <div key={it.cartId} style={{display:'flex',gap:14,padding:'12px 0',alignItems:'center'}}>
-              <div style={{width:60,height:60,borderRadius:8,overflow:'hidden'}}><ProdImg kind={it.kind} material={it.material} size={42}/></div>
+              <div style={{width:60,height:60,borderRadius:8,overflow:'hidden'}}><CartItemImage it={it} size={42}/></div>
               <div style={{flex:1}}>
                 <div style={{fontFamily:'var(--display)',fontSize:15}}>{it.name}</div>
                 <div style={{fontSize:12,color:'var(--ink-mute)'}}>{it.finish} · {it.size} · Qty {it.qty}</div>

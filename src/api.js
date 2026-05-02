@@ -37,6 +37,7 @@ export const api = {
   // addresses
   listAddresses: () => req('/api/addresses'),
   addAddress: (a) => req('/api/addresses', { method: 'POST', body: JSON.stringify(a) }),
+  updateAddress: (id, a) => req(`/api/addresses/${id}`, { method: 'PUT', body: JSON.stringify(a) }),
   removeAddress: (id) => req(`/api/addresses/${id}`, { method: 'DELETE' }),
 
   // orders

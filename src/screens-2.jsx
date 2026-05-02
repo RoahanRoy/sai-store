@@ -1,7 +1,123 @@
 // Screens part 2: Cart, Checkout, Payment, Order Confirmation, Tracking, Login, Account
 import React from 'react';
-import { ADDRESSES } from './data.js';
 import { Icon, ProdImg, SaiMark } from './primitives.jsx';
+
+const DELIVERY_PIN = '248001';
+const DELIVERY_CITY = 'Dehradun';
+const DELIVERY_STATE = 'Uttarakhand';
+
+function emptyAddressForm() {
+  return { label:'Home', name:'', phone:'', line:'', city:DELIVERY_CITY, state:DELIVERY_STATE, pin:DELIVERY_PIN, is_default:false };
+}
+
+function validateAddressForm(form) {
+  const e = {};
+  if (!form.name || form.name.trim().length < 2) e.name = 'Enter full name';
+  if (!/^(\+91[\s-]?)?[6-9]\d{9}$/.test((form.phone||'').replace(/\s/g,''))) e.phone = 'Enter valid 10-digit mobile';
+  if (!form.line || form.line.length < 5) e.line = 'Enter address';
+  if (!form.city || form.city.trim().toLowerCase() !== DELIVERY_CITY.toLowerCase()) e.city = `We deliver only in ${DELIVERY_CITY}`;
+  if (form.pin !== DELIVERY_PIN) e.pin = `We deliver only to PIN ${DELIVERY_PIN}`;
+  return e;
+}
+
+function AddressForm({ form, setForm, errors, onCancel, onSave, mobile, saving, submitLabel = 'Save Address' }) {
+  return (
+    <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14,padding:mobile?16:24,border:'1px solid var(--line)',borderRadius:12,background:'var(--bg)',marginBottom:18}}>
+      <div className={`field ${errors.name?'error':''}`} style={{gridColumn:'span 2'}}><label>Full Name</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Aarav Sharma"/>{errors.name && <div className="err">{errors.name}</div>}</div>
+      <div className={`field ${errors.phone?'error':''}`}><label>Mobile</label><input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+91 98765 43210"/>{errors.phone && <div className="err">{errors.phone}</div>}</div>
+      <div className="field"><label>Label</label><input value={form.label||''} onChange={e=>setForm({...form,label:e.target.value})} placeholder="Home, Office…"/></div>
+      <div className={`field ${errors.line?'error':''}`} style={{gridColumn:'span 2'}}><label>Address</label><textarea rows={2} value={form.line} onChange={e=>setForm({...form,line:e.target.value})} placeholder="Flat / House no., Street, Area"/>{errors.line && <div className="err">{errors.line}</div>}</div>
+      <div className={`field ${errors.city?'error':''}`}><label>City</label><input value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/>{errors.city && <div className="err">{errors.city}</div>}</div>
+      <div className="field"><label>State</label><input value={form.state} onChange={e=>setForm({...form,state:e.target.value})}/></div>
+      <div className={`field ${errors.pin?'error':''}`}><label>PIN code</label><input value={form.pin} onChange={e=>setForm({...form,pin:e.target.value})} maxLength={6}/>{errors.pin && <div className="err">{errors.pin}</div>}</div>
+      <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'var(--ink-soft)'}}>
+        <input type="checkbox" checked={!!form.is_default} onChange={e=>setForm({...form,is_default:e.target.checked})}/> Set as default
+      </label>
+      <div style={{gridColumn:'span 2',display:'flex',gap:10,justifyContent:'flex-end'}}>
+        <button onClick={onCancel} className="btn btn-ghost" disabled={saving}>Cancel</button>
+        <button onClick={onSave} className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : submitLabel}</button>
+      </div>
+      <div style={{gridColumn:'span 2',fontSize:12,color:'var(--ink-mute)'}}>We currently deliver only to <strong>{DELIVERY_CITY} ({DELIVERY_PIN})</strong>.</div>
+    </div>
+  );
+}
+
+function AddressManager({ addresses, setAddresses, mobile }) {
+  const [editing, setEditing] = React.useState(null);
+  const [form, setForm] = React.useState(emptyAddressForm());
+  const [errors, setErrors] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+  const [apiError, setApiError] = React.useState('');
+
+  function startEdit(a) {
+    setForm({ label:a.label||'Home', name:a.name||'', phone:a.phone||'', line:a.line||'', city:a.city||DELIVERY_CITY, state:a.state||DELIVERY_STATE, pin:a.pin||DELIVERY_PIN, is_default:!!a.is_default });
+    setErrors({}); setApiError(''); setEditing(a.id);
+  }
+  function startNew() { setForm(emptyAddressForm()); setErrors({}); setApiError(''); setEditing('new'); }
+  function cancel() { setEditing(null); setErrors({}); setApiError(''); }
+  async function save() {
+    const e = validateAddressForm(form);
+    setErrors(e);
+    if (Object.keys(e).length) return;
+    setSaving(true); setApiError('');
+    try {
+      if (editing === 'new') await api.addAddress(form);
+      else await api.updateAddress(editing, form);
+      const next = await api.listAddresses();
+      setAddresses(next || []);
+      setEditing(null);
+    } catch (err) { setApiError(err.message || 'Could not save address'); }
+    finally { setSaving(false); }
+  }
+  async function remove(id) {
+    if (!confirm('Delete this address?')) return;
+    try {
+      await api.removeAddress(id);
+      const next = await api.listAddresses();
+      setAddresses(next || []);
+    } catch (err) { setApiError(err.message || 'Could not delete address'); }
+  }
+
+  return (
+    <>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,gap:12,flexWrap:'wrap'}}>
+        <h2 style={{fontSize:24,margin:0}}>Saved Addresses</h2>
+        {editing === null && <button onClick={startNew} className="btn btn-primary btn-sm"><Icon.Plus s={14}/> Add address</button>}
+      </div>
+      {apiError && <div style={{padding:'10px 14px',background:'rgba(220,38,38,.08)',border:'1px solid rgba(220,38,38,.3)',borderRadius:8,color:'#b91c1c',fontSize:13,marginBottom:14}}>{apiError}</div>}
+      {editing !== null && (
+        <AddressForm
+          form={form} setForm={setForm} errors={errors}
+          onCancel={cancel} onSave={save}
+          mobile={mobile} saving={saving}
+          submitLabel={editing === 'new' ? 'Save Address' : 'Update Address'}
+        />
+      )}
+      {editing === null && (
+        <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14}}>
+          {addresses.map(a => (
+            <div key={a.id} className="card" style={{padding:20,position:'relative'}}>
+              <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label || 'Address'}</span>
+                {a.is_default && <span className="chip chip-accent">DEFAULT</span>}
+              </div>
+              <div style={{fontSize:13,marginBottom:4}}>{a.name}</div>
+              <div style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.5,marginBottom:6}}>{a.line}, {a.city}, {a.state} – {a.pin}</div>
+              <div style={{fontSize:12,color:'var(--ink-mute)',marginBottom:12}}>{a.phone}</div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>startEdit(a)} className="btn btn-ghost btn-sm" type="button"><Icon.Edit/> Edit</button>
+                <button onClick={()=>remove(a.id)} className="btn btn-ghost btn-sm" type="button" style={{color:'#b91c1c'}}><Icon.Trash/> Delete</button>
+              </div>
+            </div>
+          ))}
+          {addresses.length === 0 && (
+            <div className="card" style={{padding:20,gridColumn:mobile?'auto':'span 2',color:'var(--ink-mute)',fontSize:13}}>No saved addresses yet. Click "Add address" to create one.</div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 import { api } from './api.js';
 import { AuthContext } from './App.jsx';
 
@@ -135,34 +251,85 @@ function StepBar({ step, mobile }) {
 }
 
 export function CheckoutPage({ cart, go, address, setAddress, mobile }) {
-  const [selected, setSelected] = React.useState('a1');
-  const [showNew, setShowNew] = React.useState(false);
-  const [form, setForm] = React.useState({ name:'', phone:'', line:'', city:'', state:'', pin:'' });
+  const [addresses, setAddresses] = React.useState([]);
+  const [loaded, setLoaded] = React.useState(false);
+  const [selected, setSelected] = React.useState(null);
+  const [editing, setEditing] = React.useState(null); // null | 'new' | id
+  const [form, setForm] = React.useState(emptyAddressForm());
   const [errors, setErrors] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+  const [apiError, setApiError] = React.useState('');
   const sub = cart.reduce((s,it)=>s+it.price*it.qty,0);
   const ship = sub > 999 ? 0 : 99;
   const tax = Math.round(sub * 0.05);
   const total = sub + ship + tax;
 
-  function validate() {
-    const e = {};
-    if (!form.name || form.name.length<2) e.name = 'Enter full name';
-    if (!/^(\+91[\s-]?)?[6-9]\d{9}$/.test(form.phone.replace(/\s/g,''))) e.phone = 'Enter valid 10-digit mobile';
-    if (!form.line || form.line.length<5) e.line = 'Enter address';
-    if (!form.city) e.city = 'Required';
-    if (!/^\d{6}$/.test(form.pin)) e.pin = '6-digit PIN';
+  React.useEffect(() => {
+    api.listAddresses()
+      .then(rows => {
+        setAddresses(rows || []);
+        const def = (rows || []).find(x => x.is_default) || (rows || [])[0];
+        if (def) setSelected(def.id);
+        else setEditing('new');
+        setLoaded(true);
+      })
+      .catch(() => { setLoaded(true); setEditing('new'); });
+  }, []);
+
+  function startEdit(a) {
+    setForm({ label:a.label||'Home', name:a.name||'', phone:a.phone||'', line:a.line||'', city:a.city||DELIVERY_CITY, state:a.state||DELIVERY_STATE, pin:a.pin||DELIVERY_PIN, is_default:!!a.is_default });
+    setErrors({});
+    setApiError('');
+    setEditing(a.id);
+  }
+  function startNew() {
+    setForm(emptyAddressForm());
+    setErrors({});
+    setApiError('');
+    setEditing('new');
+  }
+  function cancelForm() {
+    setEditing(null);
+    setErrors({});
+    setApiError('');
+  }
+  async function saveForm() {
+    const e = validateAddressForm(form);
     setErrors(e);
-    return Object.keys(e).length === 0;
+    if (Object.keys(e).length) return;
+    setSaving(true);
+    setApiError('');
+    try {
+      const saved = editing === 'new'
+        ? await api.addAddress(form)
+        : await api.updateAddress(editing, form);
+      const next = await api.listAddresses();
+      setAddresses(next || []);
+      setSelected(saved.id);
+      setEditing(null);
+    } catch (err) {
+      setApiError(err.message || 'Could not save address');
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function deleteAddress(id) {
+    if (!confirm('Delete this address?')) return;
+    try {
+      await api.removeAddress(id);
+      const next = await api.listAddresses();
+      setAddresses(next || []);
+      if (selected === id) setSelected((next || [])[0]?.id || null);
+      if (editing === id) setEditing(null);
+    } catch (err) {
+      setApiError(err.message || 'Could not delete address');
+    }
   }
 
   function continueToPayment() {
-    if (showNew) {
-      if (!validate()) return;
-      setAddress({...form, id:'new', label:'New'});
-    } else {
-      const a = ADDRESSES.find(x => x.id === selected);
-      setAddress(a);
-    }
+    const a = addresses.find(x => x.id === selected);
+    if (!a) { setApiError('Please select or add an address.'); return; }
+    setAddress(a);
     go('payment');
   }
 
@@ -174,45 +341,46 @@ export function CheckoutPage({ cart, go, address, setAddress, mobile }) {
           <h1 style={{fontSize:mobile?28:36,marginBottom:8}}>Delivery <span className="italic">Address</span></h1>
           <p style={{fontSize:13,color:'var(--ink-mute)',marginBottom:24}}>Where should we send your treasures?</p>
 
-          {!showNew && (
+          {apiError && <div style={{padding:'10px 14px',background:'rgba(220,38,38,.08)',border:'1px solid rgba(220,38,38,.3)',borderRadius:8,color:'#b91c1c',fontSize:13,marginBottom:14}}>{apiError}</div>}
+
+          {editing === null && (
             <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:18}}>
-              {ADDRESSES.map(a => (
-                <label key={a.id} style={{display:'flex',padding:18,border:`2px solid ${selected===a.id?'var(--accent)':'var(--line)'}`,borderRadius:12,cursor:'pointer',background: selected===a.id?'rgba(217,119,6,.04)':'var(--bg)',gap:14}}>
-                  <input type="radio" checked={selected===a.id} onChange={()=>setSelected(a.id)} style={{accentColor:'var(--accent)',marginTop:4}}/>
-                  <div style={{flex:1}}>
-                    <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:6}}>
-                      <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label}</span>
-                      {a.def && <span className="chip chip-accent">DEFAULT</span>}
+              {!loaded && <div style={{fontSize:13,color:'var(--ink-mute)'}}>Loading saved addresses…</div>}
+              {loaded && addresses.length === 0 && (
+                <div style={{padding:14,fontSize:13,color:'var(--ink-mute)',background:'var(--bg-soft)',borderRadius:10}}>No saved addresses yet. Add one below to continue.</div>
+              )}
+              {addresses.map(a => (
+                <div key={a.id} style={{display:'flex',padding:18,border:`2px solid ${selected===a.id?'var(--accent)':'var(--line)'}`,borderRadius:12,background: selected===a.id?'rgba(217,119,6,.04)':'var(--bg)',gap:14}}>
+                  <label style={{display:'flex',gap:14,flex:1,cursor:'pointer'}}>
+                    <input type="radio" checked={selected===a.id} onChange={()=>setSelected(a.id)} style={{accentColor:'var(--accent)',marginTop:4}}/>
+                    <div style={{flex:1}}>
+                      <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:6}}>
+                        <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label || 'Address'}</span>
+                        {a.is_default && <span className="chip chip-accent">DEFAULT</span>}
+                      </div>
+                      <div style={{fontSize:14,marginBottom:2}}>{a.name} · {a.phone}</div>
+                      <div style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.5}}>{a.line}, {a.city}, {a.state} – {a.pin}</div>
                     </div>
-                    <div style={{fontSize:14,marginBottom:2}}>{a.name} · {a.phone}</div>
-                    <div style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.5}}>{a.line}, {a.city}, {a.state} – {a.pin}</div>
+                  </label>
+                  <div style={{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}}>
+                    <button onClick={()=>startEdit(a)} className="btn btn-ghost btn-sm" type="button"><Icon.Edit/> Edit</button>
+                    <button onClick={()=>deleteAddress(a.id)} className="btn btn-ghost btn-sm" type="button" style={{color:'#b91c1c'}}><Icon.Trash/> Delete</button>
                   </div>
-                  <button style={{background:'none',border:0,cursor:'pointer',color:'var(--ink-mute)',alignSelf:'flex-start'}}><Icon.Edit/></button>
-                </label>
+                </div>
               ))}
-              <button onClick={()=>setShowNew(true)} style={{padding:14,border:'1.5px dashed var(--line)',borderRadius:12,background:'transparent',cursor:'pointer',fontSize:14,color:'var(--ink-soft)',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              <button onClick={startNew} style={{padding:14,border:'1.5px dashed var(--line)',borderRadius:12,background:'transparent',cursor:'pointer',fontSize:14,color:'var(--ink-soft)',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
                 <Icon.Plus s={16}/> Add new address
               </button>
             </div>
           )}
 
-          {showNew && (
-            <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14,padding:mobile?16:24,border:'1px solid var(--line)',borderRadius:12,background:'var(--bg)',marginBottom:18}}>
-              <div className={`field ${errors.name?'error':''}`} style={{gridColumn:'span 2'}}><label>Full Name</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Aarav Sharma"/>{errors.name && <div className="err">{errors.name}</div>}</div>
-              <div className={`field ${errors.phone?'error':''}`}><label>Mobile</label><input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+91 98765 43210"/>{errors.phone && <div className="err">{errors.phone}</div>}</div>
-              <div className="field"><label>Email (optional)</label><input placeholder="you@email.com"/></div>
-              <div className={`field ${errors.line?'error':''}`} style={{gridColumn:'span 2'}}><label>Address</label><textarea rows={2} value={form.line} onChange={e=>setForm({...form,line:e.target.value})} placeholder="Flat / House no., Street, Area"/>{errors.line && <div className="err">{errors.line}</div>}</div>
-              <div className={`field ${errors.city?'error':''}`}><label>City</label><input value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/>{errors.city && <div className="err">{errors.city}</div>}</div>
-              <div className="field"><label>State</label><select value={form.state} onChange={e=>setForm({...form,state:e.target.value})}><option value="">Select state</option><option>Karnataka</option><option>Maharashtra</option><option>Tamil Nadu</option><option>Delhi</option><option>Gujarat</option></select></div>
-              <div className={`field ${errors.pin?'error':''}`}><label>PIN code</label><input value={form.pin} onChange={e=>setForm({...form,pin:e.target.value})} maxLength={6}/>{errors.pin && <div className="err">{errors.pin}</div>}</div>
-              <div className="field"><label>Address type</label>
-                <div style={{display:'flex',gap:8}}>{['Home','Office','Other'].map(t => <button key={t} className="btn btn-ghost btn-sm" type="button">{t}</button>)}</div>
-              </div>
-              <div style={{gridColumn:'span 2',display:'flex',gap:10,justifyContent:'flex-end'}}>
-                <button onClick={()=>setShowNew(false)} className="btn btn-ghost">Cancel</button>
-                <button onClick={()=>{ if(validate()){ setShowNew(false); }}} className="btn btn-primary">Save Address</button>
-              </div>
-            </div>
+          {editing !== null && (
+            <AddressForm
+              form={form} setForm={setForm} errors={errors}
+              onCancel={cancelForm} onSave={saveForm}
+              mobile={mobile} saving={saving}
+              submitLabel={editing === 'new' ? 'Save Address' : 'Update Address'}
+            />
           )}
 
           <div style={{padding:18,background:'var(--bg-soft)',borderRadius:10,display:'flex',gap:12,fontSize:13,color:'var(--ink-soft)',marginBottom:24}}>
@@ -222,7 +390,7 @@ export function CheckoutPage({ cart, go, address, setAddress, mobile }) {
 
           <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
             <button onClick={()=>go('cart')} className="btn btn-ghost"><Icon.ArrowLeft/> Back to Cart</button>
-            <button onClick={continueToPayment} className="btn btn-primary btn-lg" style={mobile?{flex:1}:{}}>Continue to Payment <Icon.ArrowRight/></button>
+            <button onClick={continueToPayment} className="btn btn-primary btn-lg" style={mobile?{flex:1}:{}} disabled={editing!==null || !selected}>Continue to Payment <Icon.ArrowRight/></button>
           </div>
         </div>
         <aside style={{padding:mobile?18:24,background:'var(--bg-soft)',borderRadius:14,position:mobile?'static':'sticky',top:90,border:'1px solid var(--line)',order:mobile?-1:0}}>
@@ -667,25 +835,7 @@ export function AccountPage({ go, mobile }) {
             </>
           )}
           {tab === 'addresses' && (
-            <>
-              <h2 style={{fontSize:24,marginBottom:18}}>Saved Addresses</h2>
-              <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:14}}>
-                {addresses.map(a => (
-                  <div key={a.id} className="card" style={{padding:20,position:'relative'}}>
-                    <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-                      <span style={{fontFamily:'var(--display)',fontSize:18}}>{a.label || 'Address'}</span>
-                      {a.is_default && <span className="chip chip-accent">DEFAULT</span>}
-                    </div>
-                    <div style={{fontSize:13,marginBottom:4}}>{a.name}</div>
-                    <div style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.5,marginBottom:6}}>{a.line}, {a.city}, {a.state} – {a.pin}</div>
-                    <div style={{fontSize:12,color:'var(--ink-mute)'}}>{a.phone}</div>
-                  </div>
-                ))}
-                {addresses.length === 0 && (
-                  <div className="card" style={{padding:20,gridColumn:'span 2',color:'var(--ink-mute)',fontSize:13}}>No saved addresses yet. Add one at checkout.</div>
-                )}
-              </div>
-            </>
+            <AddressManager addresses={addresses} setAddresses={setAddresses} mobile={mobile}/>
           )}
           {tab === 'wishlist' && (
             <>

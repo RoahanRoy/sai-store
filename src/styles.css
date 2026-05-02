@@ -342,6 +342,7 @@ body {
 }
 
 /* Dark mode overrides */
+[data-theme="dark"] .hero-editorial { background: #000 !important; }
 [data-theme="dark"] .prod-img { background: #261f17; }
 [data-theme="dark"] .prod-img::before {
   background: repeating-linear-gradient(135deg, transparent 0, transparent 14px, rgba(245,235,217,.04) 14px, rgba(245,235,217,.04) 15px);

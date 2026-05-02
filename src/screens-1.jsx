@@ -57,7 +57,7 @@ function Hero({ variant = 'editorial', go, mobile }) {
     );
   }
   return (
-    <section style={{position:'relative',padding:mobile?'30px 20px 50px':'70px 40px 90px',background:'var(--bg-soft)',borderBottom:'1px solid var(--line)',overflow:'hidden'}}>
+    <section className="hero-editorial" style={{position:'relative',padding:mobile?'30px 20px 50px':'70px 40px 90px',background:'var(--bg-soft)',borderBottom:'1px solid var(--line)',overflow:'hidden'}}>
       <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1.1fr 1fr',gap:mobile?30:60,alignItems:'center',position:'relative',zIndex:2}}>
         <div>
           <div className="chip chip-plum" style={{marginBottom:22}}>✦ NEW · Akshaya Tritiya Edit</div>

@@ -1,7 +1,17 @@
 import React from 'react';
-import { PRODUCTS } from './data.js';
 import { Icon, ProdImg, SaiMark, Stars } from './primitives.jsx';
 import { AdminEditProductButton } from './admin.jsx';
+import { useProducts } from './products-store.js';
+
+function ProductHeroImage({ p, ratio = '1/1', big = true, size = 70 }) {
+  const img = (p.images || []).find(Boolean);
+  if (!img) return <ProdImg kind={p.kind} material={p.material} ratio={ratio} big={big} size={size}/>;
+  return (
+    <div style={{aspectRatio: ratio.replace('/', ' / '), width:'100%', overflow:'hidden', background:'var(--bg-soft)'}}>
+      <img src={img} alt={p.name || ''} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+    </div>
+  );
+}
 
 export function FestiveStrip({ show }) {
   if (!show) return null;
@@ -133,7 +143,7 @@ export function ProductCard({ p, onClick, variant = 'default', onAdd }) {
     return (
       <article onClick={onClick} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
         style={{cursor:'pointer',background:'var(--bg)',position:'relative'}}>
-        <ProdImg kind={p.kind} material={p.material} ratio="4/5" big size={70}/>
+        <ProductHeroImage p={p} ratio="4/5" big size={70}/>
         <div style={{padding:'14px 4px'}}>
           {p.badge && <div style={{fontSize:10,letterSpacing:'.2em',color:'var(--accent)',textTransform:'uppercase',marginBottom:4}}>{p.badge}</div>}
           <h3 style={{fontSize:18,marginBottom:4}}>{p.name}</h3>
@@ -150,7 +160,7 @@ export function ProductCard({ p, onClick, variant = 'default', onAdd }) {
   if (variant === 'minimal') {
     return (
       <article onClick={onClick} className="card" style={{cursor:'pointer',padding:0}}>
-        <ProdImg kind={p.kind} material={p.material} ratio="1/1" size={60}/>
+        <ProductHeroImage p={p} ratio="1/1" big={false} size={60}/>
         <div style={{padding:14}}>
           <div style={{fontSize:14,marginBottom:4}}>{p.name}</div>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -166,7 +176,7 @@ export function ProductCard({ p, onClick, variant = 'default', onAdd }) {
     <article onClick={onClick} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
       className="card" style={{cursor:'pointer', boxShadow: hover?'var(--shadow)':'none', transform: hover?'translateY(-2px)':'none'}}>
       <div style={{position:'relative'}}>
-        <ProdImg kind={p.kind} material={p.material} ratio="1/1" big size={70}/>
+        <ProductHeroImage p={p} ratio="1/1" big size={70}/>
         {off > 0 && <div className="chip chip-accent" style={{position:'absolute',top:10,left:10}}>−{off}%</div>}
         {p.badge && <div className="chip chip-plum" style={{position:'absolute',top:10,right:10}}>{p.badge}</div>}
         <button style={{position:'absolute',bottom:10,right:10,width:34,height:34,borderRadius:'50%',background:'var(--bg)',border:'1px solid var(--line)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--ink-soft)',opacity:hover?1:0,transition:'opacity .15s'}}>
@@ -194,12 +204,13 @@ export function ProductCard({ p, onClick, variant = 'default', onAdd }) {
 }
 
 export function SearchOverlay({ open, onClose, go }) {
+  const products = useProducts();
   const [q, setQ] = React.useState('');
   React.useEffect(() => {
     if (open) setTimeout(() => document.getElementById('sai-search-input')?.focus(), 50);
   }, [open]);
   if (!open) return null;
-  const results = q ? PRODUCTS.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.cat.toLowerCase().includes(q.toLowerCase())) : [];
+  const results = q ? products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.cat.toLowerCase().includes(q.toLowerCase())) : [];
   const trending = ['Copper bottle', 'Brass thali', 'Diya pair', 'Wedding hamper', 'Lota'];
   return (
     <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(20,15,10,.55)',zIndex:90,display:'flex',justifyContent:'center',alignItems:'flex-start',paddingTop:80,backdropFilter:'blur(4px)'}}>
@@ -217,7 +228,7 @@ export function SearchOverlay({ open, onClose, go }) {
                 {trending.map(t => <button key={t} onClick={()=>setQ(t)} className="chip" style={{cursor:'pointer'}}>{t}</button>)}
               </div>
               <div style={{fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ink-mute)',marginBottom:10}}>Popular Now</div>
-              {PRODUCTS.slice(0,3).map(p => (
+              {products.slice(0,3).map(p => (
                 <div key={p.id} onClick={()=>{go('product',p.id);onClose();}} style={{display:'flex',gap:12,padding:8,borderRadius:8,cursor:'pointer',alignItems:'center'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg-soft)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                   <div style={{width:48,height:48,flexShrink:0}}><ProdImg kind={p.kind} material={p.material} size={36}/></div>
                   <div style={{flex:1}}>

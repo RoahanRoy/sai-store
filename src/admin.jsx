@@ -1,6 +1,7 @@
 import React from 'react';
 import { api } from './api.js';
 import { AuthContext } from './App.jsx';
+import { refreshProducts } from './products-store.js';
 
 const ORDER_STATUSES = ['Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
@@ -353,6 +354,7 @@ function Products() {
   async function onDelete(p) {
     if (!confirm(`Delete product "${p.name}" (${p.id})? This cannot be undone.`)) return;
     await api.adminDeleteProduct(p.id);
+    await refreshProducts();
     load();
   }
 
@@ -452,6 +454,7 @@ export function ProductForm({ initial, isNew, categories, onClose, onSaved }) {
       };
       if (isNew) await api.adminCreateProduct(payload);
       else await api.adminUpdateProduct(initial.id, payload);
+      await refreshProducts();
       onSaved();
     } catch (err) {
       setError(err.message || 'Save failed');

@@ -1,9 +1,10 @@
 // Screens part 1: Home, Shop, Product, About, Gifts
 import React from 'react';
-import { PRODUCTS, CATEGORIES, REVIEWS_SAMPLE } from './data.js';
+import { CATEGORIES, REVIEWS_SAMPLE } from './data.js';
 import { Icon, ProdImg, Stars } from './primitives.jsx';
 import { ProductCard } from './chrome.jsx';
 import { AdminEditProductButton } from './admin.jsx';
+import { useProducts, useProduct } from './products-store.js';
 
 function Hero({ variant = 'editorial', go, mobile }) {
   if (variant === 'split') {
@@ -143,6 +144,7 @@ function CategoryGrid({ go, mobile }) {
 }
 
 function FeaturedProducts({ go, onAdd, cardVariant, mobile }) {
+  const products = useProducts();
   return (
     <section style={{padding:mobile?'40px 20px':'70px 40px',borderBottom:'1px solid var(--line)',background:'var(--bg-soft)'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:mobile?'flex-start':'flex-end',marginBottom:mobile?24:36,flexDirection:mobile?'column':'row',gap:mobile?10:0}}>
@@ -153,7 +155,7 @@ function FeaturedProducts({ go, onAdd, cardVariant, mobile }) {
         <button onClick={()=>go('shop')} className="btn btn-link">View all 159 →</button>
       </div>
       <div style={{display:'grid',gridTemplateColumns:mobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:mobile?12:18}}>
-        {PRODUCTS.slice(0,4).map(p => <ProductCard key={p.id} p={p} onClick={()=>go('product',p.id)} onAdd={onAdd} variant={cardVariant}/>)}
+        {products.slice(0,4).map(p => <ProductCard key={p.id} p={p} onClick={()=>go('product',p.id)} onAdd={onAdd} variant={cardVariant}/>)}
       </div>
     </section>
   );
@@ -219,10 +221,11 @@ export function HomePage({ go, onAdd, heroVariant, cardVariant, mobile }) {
 }
 
 export function ShopPage({ go, onAdd, cardVariant, mobile }) {
+  const products = useProducts();
   const [filterMat, setFilterMat] = React.useState('all');
   const [sort, setSort] = React.useState('featured');
   const [filtersOpen, setFiltersOpen] = React.useState(false);
-  const filtered = filterMat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.material === filterMat);
+  const filtered = filterMat === 'all' ? products : products.filter(p => p.material === filterMat);
   return (
     <>
       <div style={{padding:mobile?'24px 20px 16px':'40px 40px 24px',borderBottom:'1px solid var(--line)',background:'var(--bg-soft)'}}>
@@ -297,7 +300,7 @@ export function ShopPage({ go, onAdd, cardVariant, mobile }) {
         </aside>}
         <div>
           {!mobile && <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,paddingBottom:14,borderBottom:'1px solid var(--line-soft)'}}>
-            <div style={{fontSize:13,color:'var(--ink-mute)'}}>Showing <strong style={{color:'var(--ink)'}}>{filtered.length}</strong> of {PRODUCTS.length}</div>
+            <div style={{fontSize:13,color:'var(--ink-mute)'}}>Showing <strong style={{color:'var(--ink)'}}>{filtered.length}</strong> of {products.length}</div>
             <div style={{display:'flex',gap:14,alignItems:'center'}}>
               <span style={{fontSize:12,color:'var(--ink-mute)'}}>Sort:</span>
               <select value={sort} onChange={e=>setSort(e.target.value)} style={{border:'1px solid var(--line)',padding:'6px 10px',borderRadius:6,fontSize:13,background:'var(--bg)',fontFamily:'var(--body)'}}>
@@ -305,7 +308,7 @@ export function ShopPage({ go, onAdd, cardVariant, mobile }) {
               </select>
             </div>
           </div>}
-          {mobile && <div style={{fontSize:12,color:'var(--ink-mute)',marginBottom:14}}>Showing <strong style={{color:'var(--ink)'}}>{filtered.length}</strong> of {PRODUCTS.length}</div>}
+          {mobile && <div style={{fontSize:12,color:'var(--ink-mute)',marginBottom:14}}>Showing <strong style={{color:'var(--ink)'}}>{filtered.length}</strong> of {products.length}</div>}
           <div style={{display:'grid',gridTemplateColumns:mobile?'repeat(2,1fr)':'repeat(3,1fr)',gap:mobile?12:18}}>
             {filtered.map(p => <ProductCard key={p.id} p={p} onClick={()=>go('product',p.id)} onAdd={onAdd} variant={cardVariant}/>)}
           </div>
@@ -316,14 +319,19 @@ export function ShopPage({ go, onAdd, cardVariant, mobile }) {
 }
 
 export function ProductPage({ id, go, onAdd, addPing, mobile }) {
-  const p = PRODUCTS.find(x => x.id === id) || PRODUCTS[0];
+  const products = useProducts();
+  const p = useProduct(id);
   const [size, setSize] = React.useState(p.size[0]);
   const [finish, setFinish] = React.useState(p.finish[0]);
   const [qty, setQty] = React.useState(1);
   const [tab, setTab] = React.useState('details');
   const [imgIdx, setImgIdx] = React.useState(0);
   const off = Math.round((1 - p.price/p.mrp)*100);
+  const images = (p.images || []).filter(Boolean);
   const angles = ['Front', 'Side', '3/4', 'Detail'];
+  const thumbs = images.length ? images.slice(0, 6) : angles;
+  const activeIdx = Math.min(imgIdx, thumbs.length - 1);
+  const heroImg = images[activeIdx];
 
   return (
     <>
@@ -333,14 +341,20 @@ export function ProductPage({ id, go, onAdd, addPing, mobile }) {
       <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1.05fr 1fr',gap:mobile?24:50,padding:mobile?'20px 20px 40px':'36px 40px 60px'}}>
         <div style={{display:'flex',gap:mobile?10:14,flexDirection:mobile?'column-reverse':'row'}}>
           <div style={{display:'flex',flexDirection:mobile?'row':'column',gap:10,overflowX:mobile?'auto':'visible'}}>
-            {angles.map((a,i) => (
-              <div key={a} onClick={()=>setImgIdx(i)} style={{width:mobile?56:64,height:mobile?56:80,borderRadius:8,overflow:'hidden',border: imgIdx===i?'2px solid var(--accent)':'1px solid var(--line)',cursor:'pointer',flexShrink:0}}>
-                <ProdImg kind={p.kind} material={p.material} ratio="auto" size={36} label=""/>
+            {thumbs.map((t,i) => (
+              <div key={i} onClick={()=>setImgIdx(i)} style={{width:mobile?56:64,height:mobile?56:80,borderRadius:8,overflow:'hidden',border: activeIdx===i?'2px solid var(--accent)':'1px solid var(--line)',cursor:'pointer',flexShrink:0}}>
+                {images.length
+                  ? <img src={t} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                  : <ProdImg kind={p.kind} material={p.material} ratio="auto" size={36} label=""/>}
               </div>
             ))}
           </div>
           <div style={{flex:1,position:'relative'}}>
-            <ProdImg kind={p.kind} material={p.material} big size={180} ratio="4/5" label={angles[imgIdx]}/>
+            {heroImg
+              ? <div style={{aspectRatio:'4/5',background:'var(--bg-soft)',borderRadius:12,overflow:'hidden'}}>
+                  <img src={heroImg} alt={p.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                </div>
+              : <ProdImg kind={p.kind} material={p.material} big size={180} ratio="4/5" label={angles[activeIdx] || ''}/>}
             {p.badge && <div className="chip chip-plum" style={{position:'absolute',top:18,left:18}}>{p.badge}</div>}
           </div>
         </div>
@@ -510,7 +524,7 @@ export function ProductPage({ id, go, onAdd, addPing, mobile }) {
       <div style={{padding:mobile?'30px 20px 50px':'50px 40px 70px',borderTop:'1px solid var(--line)',background:'var(--bg-soft)'}}>
         <h3 style={{fontSize:mobile?22:28,marginBottom:mobile?16:24}}>You may also <span className="italic">cherish</span></h3>
         <div style={{display:'grid',gridTemplateColumns:mobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:mobile?12:18}}>
-          {PRODUCTS.filter(x=>x.id!==p.id).slice(0,4).map(x => <ProductCard key={x.id} p={x} onClick={()=>go('product',x.id)} onAdd={onAdd}/>)}
+          {products.filter(x=>x.id!==p.id).slice(0,4).map(x => <ProductCard key={x.id} p={x} onClick={()=>go('product',x.id)} onAdd={onAdd}/>)}
         </div>
       </div>
     </>
